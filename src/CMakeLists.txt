@@ -1,0 +1,30 @@
+﻿cmake_minimum_required(VERSION 3.23)
+
+# 현재 디렉토리에 있는 모든 파일을 SRC_FILES 변수에 추가한다.
+file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
+  ${CMAKE_CURRENT_SOURCE_DIR}/*.cc
+)
+
+# 프로젝트가 실행 바이너리
+# add_executable(타겟실행파일이름 ${SRC_FILES})
+
+# 프로젝트가 정적 라이브러리
+# add_library(타겟라이브러리이름 STATIC ${SRC_FILES})
+# target_include_directories(타겟라이브러리이름
+#     PUBLIC
+#         ${PROJECT_SOURCE_DIR}/include      # 공개 헤더 (API)
+#     PRIVATE
+#         ${CMAKE_CURRENT_SOURCE_DIR}/lib    # 내부 전용 헤더
+# )
+add_library(MyProject STATIC ${SRC_FILES})
+
+target_include_directories(MyProject
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/include      # 공개 헤더 (API)
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib    # 내부 전용 헤더
+)
+
+# 현재 타겟에 대한 정적 링킹 추가
+# lib 아래에 추가한 라이브러리를 여기에 추가
+# target_link_libraries(타겟이름 PUBLIC 링크할라이브러리이름)
