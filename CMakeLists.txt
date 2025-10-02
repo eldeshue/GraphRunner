@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 3.23)
 
 # project info
 project(
-  DefaultName
+  GraphRunner
   VERSION 0.1
-  DESCRIPTION "Default cmake project description."
+  DESCRIPTION "GraphRunner: A modern, cross-platform 3D engine."
   LANGUAGES CXX)
 
 # C++ compiler setting
@@ -42,6 +42,8 @@ set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT intro)
 # 현재 프로젝트가 binary project라면, 이하를 삭제.
 add_subdirectory(tests)		# test framework, GoogleTest
 add_subdirectory(example)	# example, show usage of the library
+
+add_subdirectory(editor)	# editor, running binary for GraphRunnerEngine
 
 # If MSVC is being used, and ASAN is enabled, we need to set the debugger environment
 # so that it behaves well with MSVC's debugger, and we can run the target from visual studio

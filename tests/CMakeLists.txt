@@ -24,7 +24,7 @@ file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
 # target_link_libraries(UnitTest PRIVATE 타겟1 타겟2 ... gtest gmock gtest_main)
 enable_testing()
 add_executable(UnitTest ${SRC_FILES})
-target_link_libraries(UnitTest PRIVATE MyProject gtest gmock gtest_main)
+target_link_libraries(UnitTest PRIVATE GraphRunner gtest gmock gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(UnitTest)

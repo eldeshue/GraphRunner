@@ -16,9 +16,9 @@ file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
 #     PRIVATE
 #         ${CMAKE_CURRENT_SOURCE_DIR}/lib    # 내부 전용 헤더
 # )
-add_library(MyProject STATIC ${SRC_FILES})
+add_library(GraphRunner STATIC ${SRC_FILES})
 
-target_include_directories(MyProject
+target_include_directories(GraphRunner
     PUBLIC
         ${PROJECT_SOURCE_DIR}/include      # 공개 헤더 (API)
     PRIVATE

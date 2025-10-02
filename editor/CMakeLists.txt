@@ -10,5 +10,5 @@ file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
   ${CMAKE_CURRENT_SOURCE_DIR}/*.cc
 )
 
-add_executable(example ${SRC_FILES})
-target_link_libraries(example PRIVATE GraphRunner)
+add_executable(editor ${SRC_FILES})
+target_link_libraries(editor PRIVATE GraphRunner)
