@@ -25,6 +25,12 @@ target_include_directories(GraphRunner
         ${CMAKE_CURRENT_SOURCE_DIR}/lib    # 내부 전용 헤더
 )
 
+# MSVC 컴파일러를 사용할 때만 Microsoft Code Analysis를 활성화합니다.
+if(MSVC)
+    target_compile_options(GraphRunner PRIVATE /analyze)
+    message(STATUS "Microsoft Code Analysis (/analyze) enabled for MSVC builds.")
+endif()
+
 # 현재 타겟에 대한 정적 링킹 추가
 # lib 아래에 추가한 라이브러리를 여기에 추가
 # target_link_libraries(타겟이름 PUBLIC 링크할라이브러리이름)
