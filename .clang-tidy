@@ -22,4 +22,5 @@ WarningsAsErrors: bugprone-*, clang-analyzer-*
 
 FormatStyle: none
 
-HeaderFilterRegex: '.*'
+# to exclude warnings from system library
+HeaderFilterRegex: '{{ LinterOptions.project_root }}/(src|include|editor)/.*'
