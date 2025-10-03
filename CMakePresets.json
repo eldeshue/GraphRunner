@@ -1,4 +1,4 @@
-{
+﻿{
     "version": 3,
     "cmakeMinimumRequired": {
         "major": 3,
@@ -33,8 +33,7 @@
                 "strategy": "external"
             },
             "cacheVariables": {
-                "ENABLE_CPPCHECK_DEFAULT": "FALSE",
-                "ENABLE_CLANG_TIDY_DEFAULT": "FALSE"
+              "CMAKE_CXX_CLANG_TIDY": "clang-tidy"
             }
         },
         {
@@ -58,51 +57,26 @@
             }
         },
         {
-            "name": "windows-msvc-debug-developer-mode",
-            "displayName": "msvc Debug (Developer Mode)",
+            "name": "windows-msvc-debug-mode",
+            "displayName": "msvc Debug",
             "description": "Target Windows with the msvc compiler, debug build type",
             "inherits": "conf-windows-common",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "cl",
                 "CMAKE_CXX_COMPILER": "cl",
-                "CMAKE_BUILD_TYPE": "Debug",
-                "ENABLE_DEVELOPER_MODE": "ON"
+                "CMAKE_BUILD_TYPE": "Debug"
             }
         },
         {
-            "name": "windows-msvc-release-developer-mode",
-            "displayName": "msvc Release (Developer Mode)",
+            "name": "windows-msvc-release-mode",
+            "displayName": "msvc Release",
             "description": "Target Windows with the msvc compiler, release build type",
             "inherits": "conf-windows-common",
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "cl",
                 "CMAKE_CXX_COMPILER": "cl",
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                "ENABLE_DEVELOPER_MODE": "ON"
-            }
-        },
-        {
-            "name": "windows-msvc-debug-user-mode",
-            "displayName": "msvc Debug (User Mode)",
-            "description": "Target Windows with the msvc compiler, debug build type",
-            "inherits": "conf-windows-common",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "cl",
-                "CMAKE_CXX_COMPILER": "cl",
-                "CMAKE_BUILD_TYPE": "Debug",
-                "ENABLE_DEVELOPER_MODE": "OFF"
-            }
-        },
-        {
-            "name": "windows-msvc-release-user-mode",
-            "displayName": "msvc Release (User Mode)",
-            "description": "Target Windows with the msvc compiler, release build type",
-            "inherits": "conf-windows-common",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "cl",
-                "CMAKE_CXX_COMPILER": "cl",
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                "ENABLE_DEVELOPER_MODE": "OFF"
+                "CMAKE_CXX_CLANG_TIDY": ""
             }
         },
         {
@@ -129,7 +103,8 @@
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang-cl",
                 "CMAKE_CXX_COMPILER": "clang-cl",
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_CLANG_TIDY": ""
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -196,18 +171,18 @@
             }
         },
         {
-            "name": "test-windows-msvc-debug-developer-mode",
+            "name": "test-windows-msvc-debug-mode",
             "displayName": "Strict",
             "description": "Enable output and stop on failure",
             "inherits": "test-common",
-            "configurePreset": "windows-msvc-debug-developer-mode"
+            "configurePreset": "windows-msvc-debug-mode"
         },
         {
-            "name": "test-windows-msvc-release-developer-mode",
+            "name": "test-windows-msvc-release-mode",
             "displayName": "Strict",
             "description": "Enable output and stop on failure",
             "inherits": "test-common",
-            "configurePreset": "windows-msvc-release-developer-mode"
+            "configurePreset": "windows-msvc-release-mode"
         },
         {
             "name": "test-windows-clang-debug",
