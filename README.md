@@ -35,10 +35,10 @@ Aims to implement modern techniques such as...
 cmake --preset <preset-name>
 ```
 example:
-- Windows + MSVC Debug (Developer Mode):
+- Windows + MSVC Debug :
 
 ```bash
-cmake --preset windows-msvc-debug-developer-mode
+cmake --preset windows-msvc-debug-mode
 ```
 - Unix-like + Clang Release:
 
@@ -54,7 +54,7 @@ cmake --build --preset <preset-name>
 example:
 
 ``` bash
-cmake --build --preset windows-msvc-debug-developer-mode
+cmake --build --preset windows-msvc-debug-mode
 ```
 
 ## 🧪 3. Test
@@ -83,7 +83,6 @@ for example:
 in VSCode, .vscode/launch.json needed
 
 # ⚙️ Summary of Major Presets
-- `windows-msvc-debug-developer-mode` :	Windows + MSVC + Debug + dev mode
 - `windows-clang-release` :	Windows + Clang + Release
 - `unixlike-gcc-debug` :	Linux/macOS + GCC + Debug
 - `unixlike-clang-release` :	Linux/macOS + Clang + Release
