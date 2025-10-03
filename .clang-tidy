@@ -1,0 +1,25 @@
+﻿# .clang-tidy
+
+Checks: >
+  -*,
+  clang-analyzer-*,
+  bugprone-*,
+  performance-*,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-use-emplace,
+  cppcoreguidelines-pro-type-member-init,
+  cppcoreguidelines-pro-type-static-cast-downcast,
+  cppcoreguidelines-owning-memory,
+  cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  cppcoreguidelines-pro-type-reinterpret-cast,
+  misc-*,
+  # 동시성 / 멀티스레딩
+  bugprone-atomic-*,
+  bugprone-lock-*
+  
+WarningsAsErrors: bugprone-*, clang-analyzer-*
+
+FormatStyle: none
+
+HeaderFilterRegex: '.*'

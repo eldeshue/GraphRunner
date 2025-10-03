@@ -27,7 +27,7 @@ target_include_directories(GraphRunner
 
 # MSVC 컴파일러를 사용할 때만 Microsoft Code Analysis를 활성화합니다.
 if(MSVC)
-    target_compile_options(GraphRunner PRIVATE /analyze)
+    target_compile_options(GraphRunner PRIVATE /analyze-)
     message(STATUS "Microsoft Code Analysis (/analyze) enabled for MSVC builds.")
 endif()
 

@@ -31,9 +31,18 @@
             "toolset": {
                 "value": "host=x64",
                 "strategy": "external"
-            },
+            }
+        },
+        {
+            "name": "debug-common",
+            "description": "debug settings for debug builds.",
+            "hidden": true,
             "cacheVariables": {
-              "CMAKE_CXX_CLANG_TIDY": "clang-tidy"
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_CLANG_TIDY": {
+                  "type": "STRING",
+                  "value": "clang-tidy;-config-file=${sourceDir}/.clang-tidy"
+                }
             }
         },
         {
@@ -57,15 +66,15 @@
             }
         },
         {
-            "name": "windows-msvc-debug-mode",
-            "displayName": "msvc Debug",
-            "description": "Target Windows with the msvc compiler, debug build type",
-            "inherits": "conf-windows-common",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "cl",
-                "CMAKE_CXX_COMPILER": "cl",
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
+          "name": "windows-msvc-debug-mode",
+          "displayName": "msvc Debug",
+          "description": "Target Windows with the msvc compiler, debug build type",
+          "inherits": ["conf-windows-common", "debug-common"],
+          "vendor": {},
+          "cacheVariables": {
+            "CMAKE_C_COMPILER": "cl",
+            "CMAKE_CXX_COMPILER": "cl"
+          }
         },
         {
             "name": "windows-msvc-release-mode",
@@ -75,19 +84,17 @@
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "cl",
                 "CMAKE_CXX_COMPILER": "cl",
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                "CMAKE_CXX_CLANG_TIDY": ""
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
         },
         {
             "name": "windows-clang-debug",
             "displayName": "clang Debug",
             "description": "Target Windows with the clang compiler, debug build type",
-            "inherits": "conf-windows-common",
+            "inherits": [ "conf-windows-common", "debug-common" ],
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang-cl",
-                "CMAKE_CXX_COMPILER": "clang-cl",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_CXX_COMPILER": "clang-cl"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -103,8 +110,7 @@
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang-cl",
                 "CMAKE_CXX_COMPILER": "clang-cl",
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-                "CMAKE_CXX_CLANG_TIDY": ""
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             },
             "vendor": {
                 "microsoft.com/VisualStudioSettings/CMake/1.0": {
@@ -116,11 +122,10 @@
             "name": "unixlike-gcc-debug",
             "displayName": "gcc Debug",
             "description": "Target Unix-like OS with the gcc compiler, debug build type",
-            "inherits": "conf-unixlike-common",
+            "inherits": [ "conf-unixlike-common", "debug-common" ],
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "gcc",
-                "CMAKE_CXX_COMPILER": "g++",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_CXX_COMPILER": "g++"
             }
         },
         {
@@ -138,11 +143,10 @@
             "name": "unixlike-clang-debug",
             "displayName": "clang Debug",
             "description": "Target Unix-like OS with the clang compiler, debug build type",
-            "inherits": "conf-unixlike-common",
+            "inherits": [ "conf-unixlike-common", "debug-common"],
             "cacheVariables": {
                 "CMAKE_C_COMPILER": "clang",
-                "CMAKE_CXX_COMPILER": "clang++",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_CXX_COMPILER": "clang++"
             }
         },
         {
