@@ -1,7 +1,4 @@
 ﻿
 #include <iostream>
 
-int main()
-{
-	std::cout << "editor";
-}
+int main() { std::cout << "editor"; }

@@ -53,4 +53,45 @@ if(MSVC)
   set_target_properties(example UnitTest PROPERTIES VS_DEBUGGER_ENVIRONMENT "PATH=$(VC_ExecutablePath_x64);%PATH%")
 endif()
 
+# ===================================================================
+# ClangFormat integration
+# ===================================================================
 
+# 1. find clang-format executable
+find_program(CLANG_FORMAT_EXECUTABLE clang-format)
+
+# 2. check existence of clang-format
+if(CLANG_FORMAT_EXECUTABLE)
+    # 3. make list of target files to apply format
+    #    (recursively searching .h, .cpp files)
+    file(GLOB_RECURSE FORMATTING_SOURCES
+        "${PROJECT_SOURCE_DIR}/src/*.cc"
+        "${PROJECT_SOURCE_DIR}/src/*.cpp"
+        "${PROJECT_SOURCE_DIR}/include/*.h"
+        "${PROJECT_SOURCE_DIR}/include/*.hpp"
+        "${PROJECT_SOURCE_DIR}/editor/*.h"
+        "${PROJECT_SOURCE_DIR}/editor/*.cc"
+    )
+
+    message(STATUS "Found files for formatting:")
+	foreach(source_file IN LISTS FORMATTING_SOURCES)
+		message(STATUS "  - ${source_file}")
+	endforeach()
+
+    # 4. add custom target named 'format'
+    add_custom_target(format
+        COMMAND ${CLANG_FORMAT_EXECUTABLE}
+                -i # direct modification (in-place)
+                --style=file # style based on .clang-format file
+                ${FORMATTING_SOURCES} # target list
+        
+        COMMENT "Formatting C++ source files with clang-format..."
+        
+        # 다른 소스 파일이 변경되어도 항상 실행되도록 설정
+        VERBATIM
+    )
+    
+    # in case failed to find clang-format
+else()
+    message(WARNING "clang-format not found. The 'format' target will not be available.")
+endif()
