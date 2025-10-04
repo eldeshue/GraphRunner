@@ -30,7 +30,32 @@ Aims to implement modern techniques such as...
 
 # How to use?
 
-## 📦 1. CMake Configure
+## 0. Prerequisite
+- CMake 3.23 equal or over
+- C++ Compiler with -std=C++20 (example: Visual Studio 2022)
+- Git
+- formatter : clang-format(optional)
+- linter : clang-tidy(optional)
+
+## 1. Cloning the Repo
+Because of using vcpkg as a Git sub-module, `--recurse-submodules` flag is necessary.
+
+```bash
+git clone --recurse-submodules git@github.com:eldeshue/GraphRunner.git GraphRunner
+```
+
+If you already cloned tihs repo without the flag, execute command below. 
+This command will initialze and update the sub-module.
+
+```bash
+cd GraphRunner
+git submodule update --init --recursive
+```
+
+## 📦 2. CMake Configure
+this project is baed on CMake with CMakePresets.json. 
+So, choose preset you want to build and run cmake.
+
 ```bash
 cmake --preset <preset-name>
 ```
@@ -46,7 +71,7 @@ cmake --preset windows-msvc-debug-mode
 cmake --preset unixlike-clang-release
 ```
 
-## 🧱 2. Build
+## 🧱 3. Build
 ``` bash
 cmake --build --preset <preset-name>
 ```
@@ -57,7 +82,7 @@ example:
 cmake --build --preset windows-msvc-debug-mode
 ```
 
-## 🧪 3. Test
+## 🧪 4. Test
 ``` bash
 ctest --preset <test-preset-name>
 ```
@@ -68,7 +93,7 @@ example:
 ctest --preset test-unixlike-gcc-debug
 ```
 
-## 🐞 4. Debug
+## 🐞 5. Debug
 debug binary goes to
 
 ```bash
@@ -91,6 +116,5 @@ for Test Presets, add test- prefix.
 example: test-unixlike-clang-release
 
 # 🚧 Warning
-CMake ≥ 3.23 is necessary.
+- License of the Package in the project is at [NOTICE.md](NOTICE.md) 
 
-before running test, build had to be done.
