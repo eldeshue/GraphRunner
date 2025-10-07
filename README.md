@@ -1,5 +1,4 @@
-﻿# Graph Runner
-## Description
+﻿![logo_image](./GraphRunner.png)
 GraphRunner is a personal project to build a modern, cross-platform graphics engine from the ground up.
 It features a flexible Render Hardware Interface (RHI) abstracting over Vulkan and DirectX 12, with a powerful Render Graph at its core to manage frame dependencies and rendering passes efficiently.
 
