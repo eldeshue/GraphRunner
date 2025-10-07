@@ -30,6 +30,20 @@ target_include_directories(GraphRunner
 # find_package(패키지 이름 CONFIG REQUIRED)
 # target_link_libraries(타겟이름 PUBLIC 링크할라이브러리이름)
 
+# volk, vulkan loader
+find_package(volk CONFIG REQUIRED)
+if(WIN32)
+    set(VOLK_STATIC_DEFINES  VK_USE_PLATFORM_WIN32_KHR)
+elseif(APPLE)
+    set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_MACOS_MVK)
+    # Link against Metal framework for MoltenVK
+    target_link_libraries(your_app PRIVATE "-framework Metal" "-framework MetalKit" "-framework Cocoa")
+elseif(UNIX AND NOT APPLE)
+    # Linux-specific configuration
+    set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_XCB_KHR)
+    # You might need to link against XCB or Wayland libraries
+endif()
+target_link_libraries(GraphRunner PRIVATE volk::volk volk::volk_headers)
 
 # MSVC 컴파일러를 사용할 때만 Microsoft Code Analysis를 활성화합니다.
 if(MSVC)
