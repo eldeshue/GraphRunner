@@ -6,15 +6,21 @@
         "patch": 0
     },
     "configurePresets": [
-        {
-          "name": "conf-common",
-          "description": "General settings that apply to all configurations",
-          "hidden": true,
-          "generator": "Ninja",
-          "toolchainFile": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
-          "binaryDir": "${sourceDir}/out/build/${presetName}",
-          "installDir": "${sourceDir}/out/install/${presetName}"
-        },
+      {
+        "name": "conf-common",
+        "description": "General settings that apply to all configurations",
+        "hidden": true,
+        "generator": "Ninja",
+        "toolchainFile": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
+        "binaryDir": "${sourceDir}/out/build/${presetName}",
+        "installDir": "${sourceDir}/out/install/${presetName}",
+        "cacheVariables": {
+          "VULKAN_VALIDATION": {
+            "type": "BOOL",
+            "value": "OFF"
+          }
+        }
+      },
         {
             "name": "conf-windows-common",
             "description": "Windows settings for MSBuild toolchain that apply to msvc and clang",
@@ -38,13 +44,17 @@
             "name": "debug-common",
             "description": "debug settings for debug builds.",
             "hidden": true,
-            "cacheVariables": {
-              "CMAKE_BUILD_TYPE": "Debug",
-              "CMAKE_CXX_CLANG_TIDY": {
-                  "type": "STRING",
-                  "value": "clang-tidy;-config-file=${sourceDir}/.clang-tidy"
-                }
+          "cacheVariables": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_CLANG_TIDY": {
+              "type": "STRING",
+              "value": "clang-tidy;-config-file=${sourceDir}/.clang-tidy"
+            },
+            "VULKAN_VALIDATION": {
+              "type": "BOOL",
+              "value": "ON"
             }
+          }
         },
         {
             "name": "conf-unixlike-common",
