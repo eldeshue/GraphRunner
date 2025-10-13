@@ -77,6 +77,7 @@ if(CLANG_FORMAT_EXECUTABLE)
     # 3. make list of target files to apply format
     #    (recursively searching .h, .cpp files)
     file(GLOB_RECURSE FORMATTING_SOURCES
+        "${PROJECT_SOURCE_DIR}/src/*.h"
         "${PROJECT_SOURCE_DIR}/src/*.cc"
         "${PROJECT_SOURCE_DIR}/src/*.cpp"
         "${PROJECT_SOURCE_DIR}/include/*.h"
@@ -120,6 +121,7 @@ if(CLANG_TIDY_EXECUTABLE)
     # 3. make list of target files to apply tidy check
     #    (recursively searching source files)
     file(GLOB_RECURSE TIDY_SOURCES
+        "${PROJECT_SOURCE_DIR}/src/*.h"
         "${PROJECT_SOURCE_DIR}/src/*.cc"
         "${PROJECT_SOURCE_DIR}/src/*.cpp"
         "${PROJECT_SOURCE_DIR}/include/*.h"
