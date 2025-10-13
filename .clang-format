@@ -94,10 +94,10 @@ EmptyLineAfterAccessModifier: Never    # v13.
 EmptyLineBeforeAccessModifier: Always  # v12.
 InsertBraces: true                     # v15. if (true) return;  ==>  if (true) { return; }
 InsertNewlineAtEOF: true               # v16.
-InsertTrailingCommas: true             # v11. (JavaScript only)
+#InsertTrailingCommas: true             # v11. (JavaScript only)
 LineEnding: LF                         # v16.
 QualifierAlignment: Right              # v14. const int  ==>  int const
-RemoveParentheses: Return              # v17. return(0)  ==>  return 0
+#RemoveParentheses: Return              # v17. return(0)  ==>  return 0
 RemoveSemicolon: true                  # v16.
 
 PackConstructorInitializers: NextLine   # v14
