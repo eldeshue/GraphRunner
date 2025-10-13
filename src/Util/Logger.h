@@ -8,6 +8,7 @@
 #include <iostream>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 namespace GraphRunner {
@@ -87,11 +88,26 @@ namespace Util {
     }
 
     template<typename... Args>
+    [[noreturn]]
     void exit_with_message(std::format_string<Args...> fmt, Args&&... args) {
         string message = std::format(fmt, std::forward<Args>(args)...);
         Logger::print_log(message);
         assert(false);
         exit(EXIT_FAILURE);
+    }
+
+    template<typename ExceptionType, typename... Args>
+    [[noreturn]]
+    void throw_with_message(
+        ExceptionType const& err,
+        std::format_string<Args...> fmt,
+        Args&&... args
+    ) {
+        string message = std::format(fmt, std::forward<Args>(args)...);
+        Logger::print_log(err.what( ));
+        Logger::print_log(message);
+        assert(false);
+        throw err;
     }
 } // namespace Util
 } // namespace GraphRunner
