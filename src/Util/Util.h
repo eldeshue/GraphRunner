@@ -113,7 +113,8 @@ namespace Util {
     void check(VkResult result) {
         // for vulkan
         if ( result != VK_SUCCESS ) {
-            exit_with_message(
+            throw_with_message(
+                std::runtime_error("Vulkan API failed"),
                 "[Error] {} {} {}",
                 get_result_string(result),
                 __FILE__,
