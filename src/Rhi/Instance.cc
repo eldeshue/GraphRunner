@@ -17,16 +17,26 @@ using namespace GraphRunner::Util;
 
 VkResult Instance::volk_init_result = volkInitialize( );
 
+// TODO
+// 1. instance 생성 방법 변경
+// profile로 실행하지 말고, profile에서 extension을 추출하여
+// instance 생성, 중복 extension 제거하기
+//
+// 2. linux 및 mac os를 위한 portability 활성화
+// VK_KHR_portability_enumeration 연구 필요
 Instance::Instance(
     std::string_view app_name,
     std::string_view engine_name,
-    std::vector<char const*>& extensions,
-    std::vector<char const*>& layers
+    std::vector<char const*> const& extensions,
+    std::vector<char const*> const& layers
 ) :
     _instance { }, _dbg_messenger { } {
     // volk init, init volk loader
     if ( volk_init_result != VK_SUCCESS ) {
-        exit_with_message("volk initialize failed");
+        throw_with_message(
+            std::runtime_error("volk initializaion failed"),
+            "volk initialization failed"
+        );
     }
 
     // ----------------- instance creation -------------- //
@@ -142,8 +152,12 @@ static void check_profile_support(
     VkBool32 is_supported = VK_FALSE;
     check(vpGetInstanceProfileSupport(cap, nullptr, &profile, &is_supported));
     if ( is_supported != VK_TRUE ) {
-        exit_with_message(
-            "Current profile is not supported at the instance level"
+        throw_with_message(
+            std::runtime_error(
+                "Current profile is not supported at the instance level"
+            ),
+            "Current profile( {} ) is not supported at the instance level",
+            RHI_VULKAN_PROFILE_NAME
         );
     }
 }
@@ -154,7 +168,10 @@ static void check_ext_support(std::vector<char const*> const& required_ext_names
     uint32_t cnt = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &cnt, nullptr);
     if ( cnt < required_ext_names.size( ) ) {
-        exit_with_message("Multiple required extensions not supported");
+        throw_with_message(
+            std::runtime_error("Multiple required extensions not supported"),
+            "Multiple required extensions not supported"
+        );
     }
     // query supported ext
     std::vector<VkExtensionProperties> supported_ext(cnt);
@@ -178,7 +195,8 @@ static void check_ext_support(std::vector<char const*> const& required_ext_names
                  == supported_ext.end( ) ) {
                 // required extension not found among supported extensions
                 // exit
-                exit_with_message(
+                throw_with_message(
+                    std::runtime_error("Required extension not supported"),
                     "Required extension not supported : {}",
                     required_ext_name
                 );
@@ -193,7 +211,10 @@ check_layer_support(std::vector<char const*> const& required_layer_names) {
     uint32_t cnt = 0;
     vkEnumerateInstanceLayerProperties(&cnt, nullptr);
     if ( cnt < required_layer_names.size( ) ) {
-        exit_with_message("Multiple required layers not supported");
+        throw_with_message(
+            std::runtime_error("Multiple required layers not supported"),
+            "Multiple required layers not supported"
+        );
     }
     // query supported ext
     std::vector<VkLayerProperties> supported_layer(cnt);
@@ -214,8 +235,9 @@ check_layer_support(std::vector<char const*> const& required_layer_names) {
                  == supported_layer.end( ) ) {
                 // required extension not found among supported extensions
                 // exit
-                exit_with_message(
-                    "Required extension not supported : {}",
+                throw_with_message(
+                    std::runtime_error("Reauired layer not supported"),
+                    "Required layer not supported : {}",
                     required_layer_name
                 );
             }

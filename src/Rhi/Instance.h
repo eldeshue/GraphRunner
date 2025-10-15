@@ -31,8 +31,8 @@ namespace Rhi {
         Instance(
             std::string_view app_name,
             std::string_view engine_name,
-            std::vector<char const*>& extensions,
-            std::vector<char const*>& layers
+            std::vector<char const*> const& extensions,
+            std::vector<char const*> const& layers
         );
         ~Instance( );
 
