@@ -12,7 +12,8 @@ namespace GraphRunner {
 namespace Rhi {
     class Instance {
       private:
-        // disable copy constructor
+        // no default, no copy
+        Instance( ) = delete;
         Instance(Instance const&) = delete;
         Instance& operator=(Instance const&) = delete;
 
@@ -23,8 +24,10 @@ namespace Rhi {
         using InstanceHandle = VkInstance;
         InstanceHandle _instance;
 
+#ifdef ENABLE_VULKAN_VALIDATION
         using DebugHandle = VkDebugUtilsMessengerEXT;
         DebugHandle _dbg_messenger;
+#endif
 
       public:
         // default, profile 2024 roadmap

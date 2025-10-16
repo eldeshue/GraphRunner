@@ -29,7 +29,12 @@ Instance::Instance(
     std::vector<std::string_view> const& required_ext_names,
     std::vector<std::string_view> const& required_laye_names
 ) :
-    _instance { }, _dbg_messenger { } {
+    _instance { }
+#ifdef ENABLE_VULKAN_VALIDATION
+    ,
+    _dbg_messenger { }
+#endif
+{
     // volk init, init volk loader
     if ( volk_init_result != VK_SUCCESS ) {
         throw_with_message(
@@ -145,9 +150,32 @@ Instance::~Instance( ) {
 // specialization for std::swap
 
 // movable
-Instance::Instance(Instance&& other) noexcept {}
+Instance::Instance(Instance&& other) noexcept :
+    _instance(other._instance)
+#ifdef ENABLE_VULKAN_VALIDATION
+    ,
+    _dbg_messenger(other._dbg_messenger)
+#endif
+{
+    other._instance = VK_NULL_HANDLE;
+#ifdef ENABLE_VULKAN_VALIDATION
+    other._dbg_messenger = VK_NULL_HANDLE;
+#endif
+}
 
-Instance& Instance::operator=(Instance&& other) noexcept {}
+Instance& Instance::operator=(Instance&& other) noexcept {
+    if ( this != &other ) {
+#ifdef ENABLE_VULKAN_VALIDATION
+        vkDestroyDebugUtilsMessengerEXT(_instance, _dbg_messenger, nullptr);
+        _dbg_messenger = other._dbg_messenger;
+        other._dbg_messenger = VK_NULL_HANDLE;
+#endif
+        vkDestroyInstance(_instance, nullptr);
+        _instance = other._instance;
+        other._instance = VK_NULL_HANDLE;
+    }
+    return *this;
+}
 
 static void check_profile_support(
     VpCapabilities const& cap,
