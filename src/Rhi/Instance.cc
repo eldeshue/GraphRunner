@@ -65,6 +65,12 @@ Instance::Instance(
     VkDebugUtilsMessengerCreateInfoEXT debug_messenger_ci { };
     set_debug_messenger_ci(debug_messenger_ci);
 #endif
+#ifdef ENABLE_VULKAN_PORTABILITY
+    bool const is_portability_supported = check_portability_support( );
+    if ( is_portability_supported ) {
+        extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+    }
+#endif
 
     // app creation info
     VkApplicationInfo app_info { };
@@ -81,6 +87,11 @@ Instance::Instance(
     // chaining creation info for debugging create instance
     debug_messenger_ci.pNext = instance_ci.pNext;
     instance_ci.pNext = &debug_messenger_ci;
+#endif
+#ifdef ENABLE_VULKAN_PORTABILITY
+    if ( is_portability_supported ) {
+        instance_ci.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+    }
 #endif
     instance_ci.enabledLayerCount = layers.size( );
     instance_ci.ppEnabledLayerNames = layers.data( );
@@ -224,6 +235,31 @@ get_final_layer(std::vector<std::string_view> const& l_names) {
 #endif
     check_layer_support(result);
     return result;
+}
+
+static bool check_portability_support( ) {
+    uint32_t cnt = 0;
+    vkEnumerateInstanceExtensionProperties(nullptr, &cnt, nullptr);
+    std::vector<VkExtensionProperties> supported_ext(cnt);
+    VkResult const query_result = vkEnumerateInstanceExtensionProperties(
+        nullptr,
+        &cnt,
+        supported_ext.data( )
+    );
+    return (
+        std::find_if(
+            supported_ext.begin( ),
+            supported_ext.end( ),
+            [](VkExtensionProperties const& ext_prop) {
+                return strcmp(
+                           ext_prop.extensionName,
+                           VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME
+                       )
+                    == 0; // name compare, same
+            }
+        )
+        != supported_ext.end( )
+    );
 }
 
 static void check_ext_support(std::vector<char const*> const& required_ext_names

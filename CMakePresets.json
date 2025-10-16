@@ -18,6 +18,10 @@
           "VULKAN_VALIDATION": {
             "type": "BOOL",
             "value": "OFF"
+          },
+          "VULKAN_PORTABILITY": {
+            "type" : "BOOL",
+            "value" :  "OFF"
           }
         }
       },
@@ -74,6 +78,12 @@
                 "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
                     "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}"
                 }
+            },
+            "cacheVariables": {
+              "VULKAN_PORTABILITY": {
+                "type" : "BOOL",
+                "value" :  "ON"
+              }
             }
         },
         {

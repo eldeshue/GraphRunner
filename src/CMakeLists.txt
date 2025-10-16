@@ -66,3 +66,13 @@ if(VULKAN_VALIDATION)
 else()
     message(STATUS "Vulkan validation layers: OFF")
 endif()
+
+# Vulkan Portability extension enable
+option(VULKAN_PORTABILITY "Enable Vulkan portability extension" OFF)
+if(VULKAN_PORTABILITY)
+    target_compile_definitions(GraphRunner PRIVATE ENABLE_VULKAN_PORTABILITY)
+    message(STATUS "Vulkan portability layers: ON")
+else()
+    message(STATUS "Vulkan portability validation layers: OFF")
+endif()
+
