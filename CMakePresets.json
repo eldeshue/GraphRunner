@@ -50,10 +50,6 @@
             "hidden": true,
           "cacheVariables": {
             "CMAKE_BUILD_TYPE": "Debug",
-            "CMAKE_CXX_CLANG_TIDY": {
-              "type": "STRING",
-              "value": "clang-tidy;-config-file=${sourceDir}/.clang-tidy"
-            },
             "VULKAN_VALIDATION": {
               "type": "BOOL",
               "value": "ON"
