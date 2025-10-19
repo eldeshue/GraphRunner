@@ -106,7 +106,6 @@ namespace Util {
         string message = std::format(fmt, std::forward<Args>(args)...);
         Logger::print_log(err.what( ));
         Logger::print_log(message);
-        assert(false);
         throw err;
     }
 } // namespace Util
