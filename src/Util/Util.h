@@ -2,7 +2,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <volk.h>
+#include <Volk/volk.h>
 
 #include <string>
 

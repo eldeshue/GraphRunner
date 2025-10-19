@@ -2,8 +2,9 @@
 #ifndef RHI_INSTANCE
 #define RHI_INSTANCE
 
-// vulkan
-#include <volk.h>
+// NOLINTBEGIN
+#include "Volk/volk.h"
+// NOLINTEND
 
 #include <string_view>
 #include <vector>

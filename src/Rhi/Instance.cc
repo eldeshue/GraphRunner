@@ -1,6 +1,5 @@
 ﻿
-#include "Instance.h"
-
+#include <GraphRunner/Rhi/Instance.h>
 #include <Logger.h>
 #include <Util.h>
 
@@ -11,171 +10,15 @@
 
 #include "RhiConfig.h"
 
+// NOLINTBEGIN
 #define VP_USE_OBJECT
-#include <vulkan_profiles.hpp>
+#include <VulkanProfiles/vulkan_profiles.hpp>
+// NOLINTEND
 
 using namespace GraphRunner::Rhi;
 using namespace GraphRunner::Util;
 
 VkResult Instance::volk_init_result = volkInitialize( );
-
-// TODO
-// 2. linux 및 mac os를 위한 portability 활성화
-// VK_KHR_portability_enumeration 연구 필요
-// #define ENABLE_VULKAN_VALIDATION
-Instance::Instance(
-    std::string_view app_name,
-    std::string_view engine_name,
-    std::vector<std::string_view> const& required_ext_names,
-    std::vector<std::string_view> const& required_laye_names
-) :
-    _instance { }
-#ifdef ENABLE_VULKAN_VALIDATION
-    ,
-    _dbg_messenger { }
-#endif
-{
-    // volk init, init volk loader
-    if ( volk_init_result != VK_SUCCESS ) {
-        throw_with_message(
-            std::runtime_error("volk initializaion failed"),
-            "volk initialization failed"
-        );
-    }
-
-    // ----------------- instance creation -------------- //
-    // profile creation
-    VpVulkanFunctions volk_initialized_functions = { };
-    set_vp_vulkan_func_with_volk(volk_initialized_functions);
-
-    VpCapabilitiesCreateInfo vp_cap_ci = { };
-    vp_cap_ci.apiVersion = RHI_VULKAN_API_VERSION;
-    vp_cap_ci.flags = VP_PROFILE_CREATE_STATIC_BIT;
-    vp_cap_ci.pVulkanFunctions = &volk_initialized_functions;
-
-    VpCapabilities vp_cap = { };
-    check(vpCreateCapabilities(&vp_cap_ci, nullptr, &vp_cap));
-    VpProfileProperties profile {
-        RHI_VULKAN_PROFILE_NAME,
-        RHI_VULKAN_PROFILE_SPEC_VERSION
-    };
-    check_profile_support(vp_cap, profile);
-
-    // merge extension from profile
-    auto layers = get_final_layer(required_laye_names);
-    auto extensions = get_final_extension(required_ext_names, vp_cap, profile);
-
-#ifdef ENABLE_VULKAN_VALIDATION
-    // debug messenger creation info
-    VkDebugUtilsMessengerCreateInfoEXT debug_messenger_ci { };
-    set_debug_messenger_ci(debug_messenger_ci);
-#endif
-#ifdef ENABLE_VULKAN_PORTABILITY
-    bool const is_portability_supported = check_portability_support( );
-    if ( is_portability_supported ) {
-        extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-    }
-#endif
-
-    // app creation info
-    VkApplicationInfo app_info { };
-    app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    app_info.pApplicationName = app_name.data( );
-    app_info.pEngineName = engine_name.data( );
-    app_info.apiVersion = RHI_VULKAN_PROFILE_MIN_API_VERSION;
-
-    // instance creation info
-    VkInstanceCreateInfo instance_ci { };
-    instance_ci.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    instance_ci.pApplicationInfo = &app_info;
-#ifdef ENABLE_VULKAN_VALIDATION
-    // chaining creation info for debugging create instance
-    debug_messenger_ci.pNext = instance_ci.pNext;
-    instance_ci.pNext = &debug_messenger_ci;
-#endif
-#ifdef ENABLE_VULKAN_PORTABILITY
-    if ( is_portability_supported ) {
-        instance_ci.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-    }
-#endif
-    instance_ci.enabledLayerCount = layers.size( );
-    instance_ci.ppEnabledLayerNames = layers.data( );
-    instance_ci.enabledExtensionCount = extensions.size( );
-    instance_ci.ppEnabledExtensionNames = extensions.data( );
-    check(vkCreateInstance(&instance_ci, nullptr, &_instance));
-
-    // load api functions with volk
-    volkLoadInstance(_instance);
-
-    // ----------------- instance creation -------------- //
-
-#ifdef ENABLE_VULKAN_VALIDATION
-    // messenger create
-    check(vkCreateDebugUtilsMessengerEXT(
-        _instance,
-        &debug_messenger_ci,
-        nullptr,
-        &_dbg_messenger
-    ));
-#endif
-}
-
-static void set_vp_vulkan_func_with_volk(VpVulkanFunctions& functions) {
-    // set func ptr with volk loaded functions
-    functions.GetInstanceProcAddr = vkGetInstanceProcAddr;
-    functions.GetDeviceProcAddr = vkGetDeviceProcAddr;
-    functions.EnumerateInstanceVersion = vkEnumerateInstanceVersion;
-    functions.EnumerateInstanceExtensionProperties =
-        vkEnumerateInstanceExtensionProperties;
-    functions.EnumerateDeviceExtensionProperties =
-        vkEnumerateDeviceExtensionProperties;
-    functions.GetPhysicalDeviceFeatures2 = vkGetPhysicalDeviceFeatures2;
-    functions.GetPhysicalDeviceProperties2 = vkGetPhysicalDeviceProperties2;
-    functions.GetPhysicalDeviceFormatProperties2 =
-        vkGetPhysicalDeviceFormatProperties2;
-    functions.GetPhysicalDeviceQueueFamilyProperties2 =
-        vkGetPhysicalDeviceQueueFamilyProperties2;
-    functions.CreateInstance = vkCreateInstance;
-    functions.CreateDevice = vkCreateDevice;
-}
-
-Instance::~Instance( ) {
-#ifdef ENABLE_VULKAN_VALIDATION
-    vkDestroyDebugUtilsMessengerEXT(_instance, _dbg_messenger, nullptr);
-#endif
-    vkDestroyInstance(_instance, nullptr);
-    // volk finalize is not necessary
-}
-
-// specialization for std::swap
-
-// movable
-Instance::Instance(Instance&& other) noexcept :
-    _instance(other._instance)
-#ifdef ENABLE_VULKAN_VALIDATION
-    ,
-    _dbg_messenger(other._dbg_messenger)
-#endif
-{
-    other._instance = VK_NULL_HANDLE;
-#ifdef ENABLE_VULKAN_VALIDATION
-    other._dbg_messenger = VK_NULL_HANDLE;
-#endif
-}
-
-Instance& Instance::operator=(Instance&& other) noexcept {
-    if ( this != &other ) {
-#ifdef ENABLE_VULKAN_VALIDATION
-        vkDestroyDebugUtilsMessengerEXT(_instance, _dbg_messenger, nullptr);
-        _dbg_messenger = other._dbg_messenger;
-        other._dbg_messenger = VK_NULL_HANDLE;
-#endif
-        vkDestroyInstance(_instance, nullptr);
-        _instance = other._instance;
-        other._instance = VK_NULL_HANDLE;
-    }
-    return *this;
-}
 
 static void check_profile_support(
     VpCapabilities const& cap,
@@ -192,77 +35,6 @@ static void check_profile_support(
             RHI_VULKAN_PROFILE_NAME
         );
     }
-}
-
-static std::vector<char const*> get_final_extension(
-    std::vector<std::string_view> const& ext_names,
-    VpCapabilities const& cap,
-    VpProfileProperties const& profile
-) {
-    std::set<std::string_view> merge_set(ext_names.begin( ), ext_names.end( ));
-    uint32_t cnt = 0;
-    // get number of ext in the profile
-    vpGetProfileInstanceExtensionProperties(
-        cap,
-        &profile,
-        nullptr,
-        &cnt,
-        nullptr
-    );
-    std::vector<VkExtensionProperties> profile_ext(cnt);
-    // get ext from profile
-    check(vpGetProfileInstanceExtensionProperties(
-        cap,
-        &profile,
-        nullptr,
-        &cnt,
-        profile_ext.data( )
-    ));
-    for ( auto const& ext_prop : profile_ext ) {
-        // must be null-terminated
-        merge_set.insert(ext_prop.extensionName);
-    }
-
-#ifdef ENABLE_VULKAN_VALIDATION
-    // add debug utils ext, VK_EXT_DEBUG_UTILS_EXTENSION_NAME
-    merge_set.insert(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-#endif
-    // transform
-    std::vector<char const*> result(merge_set.size( ));
-    std::transform(
-        merge_set.begin( ),
-        merge_set.end( ),
-        result.begin( ),
-        [](std::string_view sv) { return sv.data( ); }
-    );
-    check_ext_support(result);
-    return result;
-}
-
-static std::vector<char const*>
-get_final_layer(std::vector<std::string_view> const& l_names) {
-    // there is no layer in the profile, do nothing
-    // transform
-    std::vector<char const*> result(l_names.size( ));
-    std::transform(
-        l_names.begin( ),
-        l_names.end( ),
-        result.begin( ),
-        [](std::string_view sv) { return sv.data( ); }
-    );
-#ifdef ENABLE_VULKAN_VALIDATION
-    // add validation layer, "VK_LAYER_KHRONOS_validation"
-    if ( std::find(
-             l_names.begin( ),
-             l_names.end( ),
-             "VK_LAYER_KHRONOS_validation"
-         )
-         == l_names.end( ) ) {
-        result.push_back("VK_LAYER_KHRONOS_validation");
-    }
-#endif
-    check_layer_support(result);
-    return result;
 }
 
 static bool check_portability_support( ) {
@@ -375,6 +147,77 @@ check_layer_support(std::vector<char const*> const& required_layer_names) {
     }
 }
 
+static std::vector<char const*> get_final_extension(
+    std::vector<std::string_view> const& ext_names,
+    VpCapabilities const& cap,
+    VpProfileProperties const& profile
+) {
+    std::set<std::string_view> merge_set(ext_names.begin( ), ext_names.end( ));
+    uint32_t cnt = 0;
+    // get number of ext in the profile
+    vpGetProfileInstanceExtensionProperties(
+        cap,
+        &profile,
+        nullptr,
+        &cnt,
+        nullptr
+    );
+    std::vector<VkExtensionProperties> profile_ext(cnt);
+    // get ext from profile
+    check(vpGetProfileInstanceExtensionProperties(
+        cap,
+        &profile,
+        nullptr,
+        &cnt,
+        profile_ext.data( )
+    ));
+    for ( auto const& ext_prop : profile_ext ) {
+        // must be null-terminated
+        merge_set.insert(ext_prop.extensionName);
+    }
+
+#ifdef ENABLE_VULKAN_VALIDATION
+    // add debug utils ext, VK_EXT_DEBUG_UTILS_EXTENSION_NAME
+    merge_set.insert(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+#endif
+    // transform
+    std::vector<char const*> result(merge_set.size( ));
+    std::transform(
+        merge_set.begin( ),
+        merge_set.end( ),
+        result.begin( ),
+        [](std::string_view sv) { return sv.data( ); }
+    );
+    check_ext_support(result);
+    return result;
+}
+
+static std::vector<char const*>
+get_final_layer(std::vector<std::string_view> const& l_names) {
+    // there is no layer in the profile, do nothing
+    // transform
+    std::vector<char const*> result(l_names.size( ));
+    std::transform(
+        l_names.begin( ),
+        l_names.end( ),
+        result.begin( ),
+        [](std::string_view sv) { return sv.data( ); }
+    );
+#ifdef ENABLE_VULKAN_VALIDATION
+    // add validation layer, "VK_LAYER_KHRONOS_validation"
+    if ( std::find(
+             l_names.begin( ),
+             l_names.end( ),
+             "VK_LAYER_KHRONOS_validation"
+         )
+         == l_names.end( ) ) {
+        result.push_back("VK_LAYER_KHRONOS_validation");
+    }
+#endif
+    check_layer_support(result);
+    return result;
+}
+
 #ifdef ENABLE_VULKAN_VALIDATION
 static void set_debug_messenger_ci(VkDebugUtilsMessengerCreateInfoEXT& ci) {
     // vulkan related debug options
@@ -424,3 +267,161 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_messenger_logging_callback(
     return VK_FALSE;
 }
 #endif
+
+static void set_vp_vulkan_func_with_volk(VpVulkanFunctions& functions) {
+    // set func ptr with volk loaded functions
+    functions.GetInstanceProcAddr = vkGetInstanceProcAddr;
+    functions.GetDeviceProcAddr = vkGetDeviceProcAddr;
+    functions.EnumerateInstanceVersion = vkEnumerateInstanceVersion;
+    functions.EnumerateInstanceExtensionProperties =
+        vkEnumerateInstanceExtensionProperties;
+    functions.EnumerateDeviceExtensionProperties =
+        vkEnumerateDeviceExtensionProperties;
+    functions.GetPhysicalDeviceFeatures2 = vkGetPhysicalDeviceFeatures2;
+    functions.GetPhysicalDeviceProperties2 = vkGetPhysicalDeviceProperties2;
+    functions.GetPhysicalDeviceFormatProperties2 =
+        vkGetPhysicalDeviceFormatProperties2;
+    functions.GetPhysicalDeviceQueueFamilyProperties2 =
+        vkGetPhysicalDeviceQueueFamilyProperties2;
+    functions.CreateInstance = vkCreateInstance;
+    functions.CreateDevice = vkCreateDevice;
+}
+
+// TODO
+// 2. linux 및 mac os를 위한 portability 활성화
+// VK_KHR_portability_enumeration 연구 필요
+// #define ENABLE_VULKAN_VALIDATION
+Instance::Instance(
+    std::string_view app_name,
+    std::string_view engine_name,
+    std::vector<std::string_view> const& required_ext_names,
+    std::vector<std::string_view> const& required_laye_names
+) :
+    _instance { }
+#ifdef ENABLE_VULKAN_VALIDATION
+    ,
+    _dbg_messenger { }
+#endif
+{
+    // volk init, init volk loader
+    if ( volk_init_result != VK_SUCCESS ) {
+        throw_with_message(
+            std::runtime_error("volk initializaion failed"),
+            "volk initialization failed"
+        );
+    }
+
+    // ----------------- instance creation -------------- //
+    // profile creation
+    VpVulkanFunctions volk_initialized_functions = { };
+    set_vp_vulkan_func_with_volk(volk_initialized_functions);
+
+    VpCapabilitiesCreateInfo vp_cap_ci = { };
+    vp_cap_ci.apiVersion = RHI_VULKAN_API_VERSION;
+    vp_cap_ci.flags = VP_PROFILE_CREATE_STATIC_BIT;
+    vp_cap_ci.pVulkanFunctions = &volk_initialized_functions;
+
+    VpCapabilities vp_cap = { };
+    check(vpCreateCapabilities(&vp_cap_ci, nullptr, &vp_cap));
+    VpProfileProperties profile {
+        RHI_VULKAN_PROFILE_NAME,
+        RHI_VULKAN_PROFILE_SPEC_VERSION
+    };
+    check_profile_support(vp_cap, profile);
+
+    // merge extension from profile
+    auto layers = get_final_layer(required_laye_names);
+    auto extensions = get_final_extension(required_ext_names, vp_cap, profile);
+
+#ifdef ENABLE_VULKAN_VALIDATION
+    // debug messenger creation info
+    VkDebugUtilsMessengerCreateInfoEXT debug_messenger_ci { };
+    set_debug_messenger_ci(debug_messenger_ci);
+#endif
+#ifdef ENABLE_VULKAN_PORTABILITY
+    bool const is_portability_supported = check_portability_support( );
+    if ( is_portability_supported ) {
+        extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+    }
+#endif
+
+    // app creation info
+    VkApplicationInfo app_info { };
+    app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    app_info.pApplicationName = app_name.data( );
+    app_info.pEngineName = engine_name.data( );
+    app_info.apiVersion = RHI_VULKAN_PROFILE_MIN_API_VERSION;
+
+    // instance creation info
+    VkInstanceCreateInfo instance_ci { };
+    instance_ci.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    instance_ci.pApplicationInfo = &app_info;
+#ifdef ENABLE_VULKAN_VALIDATION
+    // chaining creation info for debugging create instance
+    debug_messenger_ci.pNext = instance_ci.pNext;
+    instance_ci.pNext = &debug_messenger_ci;
+#endif
+#ifdef ENABLE_VULKAN_PORTABILITY
+    if ( is_portability_supported ) {
+        instance_ci.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+    }
+#endif
+    instance_ci.enabledLayerCount = layers.size( );
+    instance_ci.ppEnabledLayerNames = layers.data( );
+    instance_ci.enabledExtensionCount = extensions.size( );
+    instance_ci.ppEnabledExtensionNames = extensions.data( );
+    check(vkCreateInstance(&instance_ci, nullptr, &_instance));
+
+    // load api functions with volk
+    volkLoadInstance(_instance);
+
+    // ----------------- instance creation -------------- //
+
+#ifdef ENABLE_VULKAN_VALIDATION
+    // messenger create
+    check(vkCreateDebugUtilsMessengerEXT(
+        _instance,
+        &debug_messenger_ci,
+        nullptr,
+        &_dbg_messenger
+    ));
+#endif
+}
+
+Instance::~Instance( ) {
+#ifdef ENABLE_VULKAN_VALIDATION
+    vkDestroyDebugUtilsMessengerEXT(_instance, _dbg_messenger, nullptr);
+#endif
+    vkDestroyInstance(_instance, nullptr);
+    // volk finalize is not necessary
+}
+
+// specialization for std::swap
+
+// movable
+Instance::Instance(Instance&& other) noexcept :
+    _instance(other._instance)
+#ifdef ENABLE_VULKAN_VALIDATION
+    ,
+    _dbg_messenger(other._dbg_messenger)
+#endif
+{
+    other._instance = VK_NULL_HANDLE;
+#ifdef ENABLE_VULKAN_VALIDATION
+    other._dbg_messenger = VK_NULL_HANDLE;
+#endif
+}
+
+Instance& Instance::operator=(Instance&& other) noexcept {
+    if ( this != &other ) {
+#ifdef ENABLE_VULKAN_VALIDATION
+        vkDestroyDebugUtilsMessengerEXT(_instance, _dbg_messenger, nullptr);
+        _dbg_messenger = other._dbg_messenger;
+        other._dbg_messenger = VK_NULL_HANDLE;
+#endif
+        vkDestroyInstance(_instance, nullptr);
+        _instance = other._instance;
+        other._instance = VK_NULL_HANDLE;
+    }
+    return *this;
+}

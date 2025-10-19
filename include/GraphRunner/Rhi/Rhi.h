@@ -1,5 +1,10 @@
-﻿/// @brief code for loading volk.
+﻿
+#ifndef RHI
+#define RHI
+
+/// @brief code for loading volk.
 /// Instead of setting various extensions, using profiles,
 /// volk can handle initialization.
-#define VOLK_IMPLEMENTATION
-#include <volk.h>
+#include "Instance.h"
+
+#endif
