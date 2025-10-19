@@ -270,11 +270,17 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_messenger_logging_callback(
 
 static void set_vp_vulkan_func_with_volk(VpVulkanFunctions& functions) {
     // set func ptr with volk loaded functions
-    functions.GetInstanceProcAddr = vkGetInstanceProcAddr;
-    functions.GetDeviceProcAddr = vkGetDeviceProcAddr;
+    // instance has not been created,
+    // so only initialize instance related functions
     functions.EnumerateInstanceVersion = vkEnumerateInstanceVersion;
     functions.EnumerateInstanceExtensionProperties =
         vkEnumerateInstanceExtensionProperties;
+    functions.GetInstanceProcAddr = vkGetInstanceProcAddr;
+    functions.CreateInstance = vkCreateInstance;
+    /*
+    // device related vp functions, not loaded yet
+    functions.CreateDevice = vkCreateDevice;
+    functions.GetDeviceProcAddr = vkGetDeviceProcAddr;
     functions.EnumerateDeviceExtensionProperties =
         vkEnumerateDeviceExtensionProperties;
     functions.GetPhysicalDeviceFeatures2 = vkGetPhysicalDeviceFeatures2;
@@ -283,13 +289,10 @@ static void set_vp_vulkan_func_with_volk(VpVulkanFunctions& functions) {
         vkGetPhysicalDeviceFormatProperties2;
     functions.GetPhysicalDeviceQueueFamilyProperties2 =
         vkGetPhysicalDeviceQueueFamilyProperties2;
-    functions.CreateInstance = vkCreateInstance;
-    functions.CreateDevice = vkCreateDevice;
+     */
 }
 
 // TODO
-// 2. linux 및 mac os를 위한 portability 활성화
-// VK_KHR_portability_enumeration 연구 필요
 // #define ENABLE_VULKAN_VALIDATION
 Instance::Instance(
     std::string_view app_name,
@@ -318,11 +321,12 @@ Instance::Instance(
 
     VpCapabilitiesCreateInfo vp_cap_ci = { };
     vp_cap_ci.apiVersion = RHI_VULKAN_API_VERSION;
-    vp_cap_ci.flags = VP_PROFILE_CREATE_STATIC_BIT;
+    vp_cap_ci.flags = 0;
     vp_cap_ci.pVulkanFunctions = &volk_initialized_functions;
 
     VpCapabilities vp_cap = { };
-    check(vpCreateCapabilities(&vp_cap_ci, nullptr, &vp_cap));
+    // does not check vpCreateCap.. because volk does not fully loaded...
+    vpCreateCapabilities(&vp_cap_ci, nullptr, &vp_cap);
     VpProfileProperties profile {
         RHI_VULKAN_PROFILE_NAME,
         RHI_VULKAN_PROFILE_SPEC_VERSION
