@@ -53,7 +53,7 @@ add_subdirectory(editor)	# editor, running binary for GraphRunnerEngine
 if(MSVC)
   # add executable as a targets
   # set_target_properties(실행1 실행2 ... 실행n PROPERTIES VS_DEBUGGER_ENVIRONMENT "PATH=$(VC_ExecutablePath_x64);%PATH%")
-  set_target_properties(example UnitTest PROPERTIES VS_DEBUGGER_ENVIRONMENT "PATH=$(VC_ExecutablePath_x64);%PATH%")
+  set_target_properties(example RhiTest PROPERTIES VS_DEBUGGER_ENVIRONMENT "PATH=$(VC_ExecutablePath_x64);%PATH%")
 endif()
 
 
@@ -88,7 +88,7 @@ if(CLANG_FORMAT_EXECUTABLE)
 
     message(STATUS "Found files for formatting:")
 	foreach(source_file IN LISTS FORMATTING_SOURCES)
-		message(STATUS "  - ${source_file}")
+		message(STATUS "  -> ${source_file}")
 	endforeach()
 
     # 4. add custom target named 'format'
@@ -131,14 +131,20 @@ if(CLANG_TIDY_EXECUTABLE)
         # ... 프로젝트에 포함된 모든 소스 파일 경로 패턴 추가 ...
     )
 
+    message(STATUS "Found files for linting:")
+foreach(SOURCE_FILE ${TIDY_SOURCES})
+    message(STATUS "  -> ${SOURCE_FILE}")
+endforeach()
+    
     # 4. add custom target named 'clang-tidy'
     add_custom_target(clang-tidy
-        COMMAND ${CLANG_TIDY_EXECUTABLE}
-                -p ${CMAKE_BINARY_DIR}
-                ${TIDY_SOURCES}
-        
-        COMMENT "Running clang-tidy on all sources..."
-        VERBATIM
+	COMMAND ${CLANG_TIDY_EXECUTABLE}
+		-p ${CMAKE_BINARY_DIR}
+		--system-headers=false
+		--header-filter='^$'
+		${TIDY_SOURCES}
+    COMMENT "Running clang-tidy on all sources..."
+    VERBATIM
     )
 
 # in case failed to find clang-tidy
