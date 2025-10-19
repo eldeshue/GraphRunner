@@ -27,19 +27,16 @@ enable_testing()
 add_executable(RhiTest RhiTest.cc)
 target_link_libraries(RhiTest PRIVATE GraphRunner gtest gmock gtest_main)
 # add compile options for the project
+# add compile options for the project
 target_compile_options(RhiTest PRIVATE
     # MSVC (Visual Studio)일 경우 예외 처리 모델 활성화
-    "$<IF:$<CXX_COMPILER_ID:MSVC>,
-        /EHsc
-    , 0>"
-
+    $<$<CXX_COMPILER_ID:MSVC>:/EHsc>
+    
     # GNU(GCC) 또는 Clang 컴파일러일 경우 예외 활성화
-    "$<IF:$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>,
-        -fexceptions
-    , 0>"
+    $<$<CXX_COMPILER_ID:GNU>:-fexceptions>
+    $<$<CXX_COMPILER_ID:Clang>:-fexceptions>
 
     # (여기에 다른 플래그들을 추가할 수 있습니다)
-    # 예: "$<IF:$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>, -Wall, 0>"
 )
 
 include(GoogleTest)

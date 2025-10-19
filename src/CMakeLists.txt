@@ -2,8 +2,8 @@
 
 # 현재 디렉토리에 있는 모든 파일을 SRC_FILES 변수에 추가한다.
 file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.cc,
-  ${CMAKE_CURRENT_SOURCE_DIR}/Util/*.cc,
+  ${CMAKE_CURRENT_SOURCE_DIR}/*.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/Util/*.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/Rhi/*.cc
 )
 
@@ -32,17 +32,13 @@ target_include_directories(GraphRunner
 # add compile options for the project
 target_compile_options(GraphRunner PRIVATE
     # MSVC (Visual Studio)일 경우 예외 처리 모델 활성화
-    "$<IF:$<CXX_COMPILER_ID:MSVC>,
-        /EHsc
-    , "">"
-
+    $<$<CXX_COMPILER_ID:MSVC>:/EHsc>
+    
     # GNU(GCC) 또는 Clang 컴파일러일 경우 예외 활성화
-    "$<IF:$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>,
-        -fexceptions
-    , "">"
+    $<$<CXX_COMPILER_ID:GNU>:-fexceptions>
+    $<$<CXX_COMPILER_ID:Clang>:-fexceptions>
 
     # (여기에 다른 플래그들을 추가할 수 있습니다)
-    # 예: "$<IF:$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>, -Wall, 0>"
 )
 
 ###################################################################
@@ -74,7 +70,7 @@ target_include_directories(GraphRunner PUBLIC
 # volk, vulkan loader
 # instead of linking vulkan, link volk
 find_library(
-    VOLK
+    VOLK 
     NAMES volk     # 찾으려는 라이브러리 이름 (예: "foo", "bar")
     HINTS ${VULKAN_SDK_LIBRARY_DIR} # 이 경로를 우선적으로 검색
 )
@@ -83,13 +79,13 @@ if(WIN32)
 elseif(APPLE)
     set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_MACOS_MVK)
     # Link against Metal framework for MoltenVK
-    target_link_libraries(your_app PRIVATE "-framework Metal" "-framework MetalKit" "-framework Cocoa")
+    target_link_libraries(GraphRunner PRIVATE "-framework Metal" "-framework MetalKit" "-framework Cocoa")
 elseif(UNIX AND NOT APPLE)
     # Linux-specific configuration
     set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_XCB_KHR)
     # You might need to link against XCB or Wayland libraries
 endif()
-target_link_libraries(GraphRunner PRIVATE VOLK)
+target_link_libraries(GraphRunner PUBLIC ${VOLK})
 
 ###################################################################
 
