@@ -268,7 +268,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_messenger_logging_callback(
 }
 #endif
 
-static void set_vp_vulkan_func_with_volk(VpVulkanFunctions& functions) {
+static void set_vp_func_instance_with_volk(VpVulkanFunctions& functions) {
     // set func ptr with volk loaded functions
     // instance has not been created,
     // so only initialize instance related functions
@@ -317,7 +317,7 @@ Instance::Instance(
     // ----------------- instance creation -------------- //
     // profile creation
     VpVulkanFunctions volk_initialized_functions = { };
-    set_vp_vulkan_func_with_volk(volk_initialized_functions);
+    set_vp_func_instance_with_volk(volk_initialized_functions);
 
     VpCapabilitiesCreateInfo vp_cap_ci = { };
     vp_cap_ci.apiVersion = RHI_VULKAN_API_VERSION;
