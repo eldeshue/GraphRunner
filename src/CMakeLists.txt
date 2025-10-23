@@ -54,7 +54,7 @@ target_compile_options(GraphRunner PRIVATE
 set(VULKAN_SDK_INCLUDE_DIR "$ENV{VULKAN_SDK}/Include")
 set(VULKAN_SDK_LIBRARY_DIR "$ENV{VULKAN_SDK}/Lib")
 
-target_include_directories(GraphRunner PUBLIC
+target_include_directories(GraphRunner PRIVATE
     ${VULKAN_SDK_INCLUDE_DIR}
 )
 
@@ -85,7 +85,7 @@ elseif(UNIX AND NOT APPLE)
     set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_XCB_KHR)
     # You might need to link against XCB or Wayland libraries
 endif()
-target_link_libraries(GraphRunner PUBLIC ${VOLK})
+target_link_libraries(GraphRunner PRIVATE ${VOLK})
 
 ###################################################################
 

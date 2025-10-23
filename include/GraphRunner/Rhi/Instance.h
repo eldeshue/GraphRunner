@@ -2,15 +2,15 @@
 #ifndef RHI_INSTANCE
 #define RHI_INSTANCE
 
-// NOLINTBEGIN
-#include "Volk/volk.h"
-// NOLINTEND
-
 #include <string_view>
 #include <vector>
 
 namespace GraphRunner {
 namespace Rhi {
+    namespace Impl {
+        class InstanceImpl;
+    }
+
     class Instance {
       private:
         // no default, no copy
@@ -18,20 +18,9 @@ namespace Rhi {
         Instance(Instance const&) = delete;
         Instance& operator=(Instance const&) = delete;
 
-        // volk load result
-        static VkResult volk_init_result;
-
-        // instance or DXGIFactory
-        using InstanceHandle = VkInstance;
-        InstanceHandle _instance;
-
-#ifdef ENABLE_VULKAN_VALIDATION
-        using DebugHandle = VkDebugUtilsMessengerEXT;
-        DebugHandle _dbg_messenger;
-#endif
+        Impl::InstanceImpl* impl; // pointer to implementation
 
       public:
-        // default, profile 2024 roadmap
         Instance(
             std::string_view app_name,
             std::string_view engine_name,
