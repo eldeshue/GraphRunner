@@ -13,18 +13,8 @@
         "generator": "Ninja",
         "toolchainFile": "${sourceDir}/external/vcpkg/scripts/buildsystems/vcpkg.cmake",
         "binaryDir": "${sourceDir}/out/build/${presetName}",
-        "installDir": "${sourceDir}/out/install/${presetName}",
-        "cacheVariables": {
-          "VULKAN_VALIDATION": {
-            "type": "BOOL",
-            "value": "OFF"
-          },
-          "VULKAN_PORTABILITY": {
-            "type" : "BOOL",
-            "value" :  "OFF"
-          }
-        }
-      },
+        "installDir": "${sourceDir}/out/install/${presetName}"
+        },
         {
             "name": "conf-windows-common",
             "description": "Windows settings for MSBuild toolchain that apply to msvc and clang",
@@ -48,13 +38,10 @@
             "name": "debug-common",
             "description": "debug settings for debug builds.",
             "hidden": true,
-          "cacheVariables": {
-            "CMAKE_BUILD_TYPE": "Debug",
-            "VULKAN_VALIDATION": {
-              "type": "BOOL",
-              "value": "ON"
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "VULKAN_VALIDATION": "ON"
             }
-          }
         },
         {
             "name": "conf-unixlike-common",
@@ -76,10 +63,7 @@
                 }
             },
             "cacheVariables": {
-              "VULKAN_PORTABILITY": {
-                "type" : "BOOL",
-                "value" :  "ON"
-              }
+              "VULKAN_PORTABILITY": "ON"
             }
         },
         {

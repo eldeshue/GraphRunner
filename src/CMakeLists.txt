@@ -96,7 +96,7 @@ if(MSVC)
 endif()
 
 # Vulkan validation layer enable
-option(VULKAN_VALIDATION "Enable Vulkan validation layers" ON)
+option(VULKAN_VALIDATION "Vulkan validation layers" OFF)
 if(VULKAN_VALIDATION)
     target_compile_definitions(GraphRunner PRIVATE ENABLE_VULKAN_VALIDATION)
     message(STATUS "Vulkan validation layers: ON")
@@ -105,11 +105,11 @@ else()
 endif()
 
 # Vulkan Portability extension enable
-option(VULKAN_PORTABILITY "Enable Vulkan portability extension" ON)
+option(VULKAN_PORTABILITY "Vulkan portability extension" OFF)
 if(VULKAN_PORTABILITY)
     target_compile_definitions(GraphRunner PRIVATE ENABLE_VULKAN_PORTABILITY)
     message(STATUS "Vulkan portability layers: ON")
 else()
-    message(STATUS "Vulkan portability validation layers: OFF")
+    message(STATUS "Vulkan portability layers: OFF")
 endif()
 
