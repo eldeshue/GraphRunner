@@ -11,7 +11,7 @@ Instance::Instance(
     std::vector<std::string_view> const& required_ext_names,
     std::vector<std::string_view> const& required_laye_names
 ) :
-    impl(new Impl::InstanceImpl(
+    _impl(new Impl::InstanceImpl(
         app_name,
         engine_name,
         required_ext_names,
@@ -19,17 +19,17 @@ Instance::Instance(
     )) {}
 
 Instance::~Instance( ) {
-    delete impl;
-    impl = nullptr;
+    delete _impl;
+    _impl = nullptr;
 }
 
-Instance::Instance(Instance&& other) noexcept : impl(other.impl) {
-    other.impl = nullptr;
+Instance::Instance(Instance&& other) noexcept : _impl(other._impl) {
+    other._impl = nullptr;
 }
 
 Instance& Instance::operator=(Instance&& other) noexcept {
     if ( this != &other ) {
-        std::swap(this->impl, other.impl);
+        std::swap(this->_impl, other._impl);
     }
     return *this;
 }

@@ -18,7 +18,7 @@ namespace Rhi {
         Instance(Instance const&) = delete;
         Instance& operator=(Instance const&) = delete;
 
-        Impl::InstanceImpl* impl; // pointer to implementation
+        Impl::InstanceImpl* _impl; // pointer to implementation
 
       public:
         Instance(
