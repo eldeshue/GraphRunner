@@ -6,11 +6,14 @@
 #include "Volk/volk.h"
 // NOLINTEND
 
+#include <optional>
 #include <string_view>
 #include <vector>
 
 namespace GraphRunner {
 namespace Rhi {
+    class PhysicalDevice;
+
     namespace Impl {
 
         // vulkan implementation
@@ -44,6 +47,10 @@ namespace Rhi {
                 std::vector<std::string_view> const& required_laye_names
             );
             ~InstanceImpl( );
+
+            // factory functions
+            std::optional<GraphRunner::Rhi::PhysicalDevice>
+            create_single_physical_device_with_best_vram( ) const;
         };
     } // namespace Impl
 } // namespace Rhi

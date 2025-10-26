@@ -28,8 +28,6 @@ namespace Rhi {
             PhysicalDeviceImpl( );
             ~PhysicalDeviceImpl( );
 
-            // create logical device
-
             // get property
         };
     } // namespace Impl

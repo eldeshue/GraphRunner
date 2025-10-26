@@ -2,6 +2,7 @@
 #ifndef RHI_INSTANCE
 #define RHI_INSTANCE
 
+#include <optional>
 #include <string_view>
 #include <vector>
 
@@ -10,6 +11,7 @@ namespace Rhi {
     namespace Impl {
         class InstanceImpl;
     }
+    class PhysicalDevice;
 
     class Instance {
       private:
@@ -33,7 +35,9 @@ namespace Rhi {
         Instance(Instance&& other) noexcept;
         Instance& operator=(Instance&& other) noexcept;
 
-        //
+        // Instance is a factory for the physical devices
+        std::optional<PhysicalDevice>
+        create_single_physical_device_with_best_vram( ) const;
     };
 } // namespace Rhi
 } // namespace GraphRunner

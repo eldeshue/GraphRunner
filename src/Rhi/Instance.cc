@@ -1,5 +1,8 @@
 ﻿
 #include <GraphRunner/Rhi/Instance.h>
+#include <GraphRunner/Rhi/PhysicalDevice.h>
+
+#include <optional>
 
 #include "InstanceImpl.h"
 
@@ -32,4 +35,9 @@ Instance& Instance::operator=(Instance&& other) noexcept {
         std::swap(this->_impl, other._impl);
     }
     return *this;
+}
+
+std::optional<PhysicalDevice>
+Instance::create_single_physical_device_with_best_vram( ) const {
+    return _impl->create_single_physical_device_with_best_vram( );
 }

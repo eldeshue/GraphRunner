@@ -1,14 +1,17 @@
 ﻿
-#include "InstanceImpl.h"
+#include "./InstanceImpl.h"
 
+#include <GraphRunner/Rhi/PhysicalDevice.h>
 #include <Logger.h>
 #include <Util.h>
 
 #include <algorithm>
 #include <cstddef>
+#include <optional>
 #include <set>
 #include <string_view>
 
+#include "./PhysicalDeviceImpl.h"
 #include "RhiConfig.h"
 
 // NOLINTBEGIN
@@ -399,4 +402,93 @@ InstanceImpl::~InstanceImpl( ) {
 #endif
     vkDestroyInstance(_instance, nullptr);
     // volk finalize is not necessary
+}
+
+static std::uint64_t scoring_gpu_type(VkPhysicalDeviceType type) {
+    switch ( type ) {
+        case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+            return 5;
+        case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+            return 4;
+        case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU: // not for local
+            return 3;
+        case VK_PHYSICAL_DEVICE_TYPE_CPU: // SW implemented
+            return 2;
+        case VK_PHYSICAL_DEVICE_TYPE_OTHER:
+            return 1;
+        default: // unreachable
+            return 0;
+    }
+}
+
+// scoring gpu for general purpose, pc desktop enviornment
+static std::uint64_t scoring_gpu(VkPhysicalDevice const& gpu) {
+    std::uint64_t result = 0;
+
+    // gpu type
+    // prefer discrete gpu
+    VkPhysicalDeviceProperties2 prop2 { };
+    vkGetPhysicalDeviceProperties2(gpu, &prop2);
+    result |= (scoring_gpu_type(prop2.properties.deviceType) << 60);
+
+    // vram size
+    // prefer large size
+    VkPhysicalDeviceMemoryProperties2 mem_prop2 { };
+    vkGetPhysicalDeviceMemoryProperties2(gpu, &mem_prop2);
+    VkDeviceSize vram_size = 0;
+    for ( uint32_t i = 0; i < mem_prop2.memoryProperties.memoryHeapCount;
+          ++i ) {
+        VkMemoryHeap const& heap = mem_prop2.memoryProperties.memoryHeaps[i];
+        if ( heap.flags
+             & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT ) // check local bit flag
+        {
+            vram_size += heap.size;
+        }
+    }
+    result |= vram_size;
+
+    return result;
+}
+
+std::optional<GraphRunner::Rhi::PhysicalDevice>
+InstanceImpl::create_single_physical_device_with_best_vram( ) const {
+    // factory function, create empty object
+    GraphRunner::Rhi::PhysicalDevice result;
+    result._impl = new PhysicalDeviceImpl( );
+
+    // fill the object
+    // pick discrete gpu, with largest vram
+    uint32_t gpuCount = 0;
+    check(vkEnumeratePhysicalDevices(_instance, &gpuCount, nullptr));
+    if ( gpuCount == 0 ) {
+        return std::nullopt;
+    }
+    std::vector<VkPhysicalDevice> devices(gpuCount);
+    check(vkEnumeratePhysicalDevices(_instance, &gpuCount, devices.data( )));
+
+    // sort gpu by property
+    // discrete, integrated, cpu, virtual, other
+    std::vector<std::pair<std::uint64_t, VkPhysicalDevice>> sort_buffer(gpuCount
+    );
+    std::transform(
+        devices.begin( ),
+        devices.end( ),
+        sort_buffer.begin( ),
+        [](VkPhysicalDevice const& gpu) {
+            return std::make_pair(scoring_gpu(gpu), gpu);
+        }
+    );
+    // sort descending order
+    std::sort(
+        sort_buffer.begin( ),
+        sort_buffer.end( ),
+        std::greater<std::pair<std::uint64_t, VkPhysicalDevice>>( )
+    );
+
+    // init
+    // highest score at index 0
+    result._impl->_pdvc = sort_buffer[0].second;
+
+    // return
+    return result;
 }
