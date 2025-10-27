@@ -24,8 +24,9 @@ namespace Rhi {
             // handle
             VkPhysicalDevice _pdvc;
 
-          public:
             PhysicalDeviceImpl( );
+
+          public:
             ~PhysicalDeviceImpl( );
 
             // get property

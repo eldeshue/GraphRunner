@@ -149,7 +149,7 @@ void log_device_memories(VkPhysicalDevice device) {
             print_log(
                 "    Memory Heap {}: {} MB, flags: {}",
                 i,
-                heap.size / (1024 * 1024),
+                heap.size / (1024LL * 1024LL),
                 heapFlags
             );
         }
