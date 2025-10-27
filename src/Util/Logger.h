@@ -3,6 +3,8 @@
 #define LOGGER_H
 
 #include <cassert>
+#include <cstddef>
+#include <cstdlib>
 #include <format>
 #include <fstream>
 #include <iostream>
@@ -65,7 +67,7 @@ namespace Util {
             return *instance;
         }
 
-        static void print_log(string message) {
+        static void print_log(string const& message) {
             auto& logger = get_instance( );
 
             cout << message << endl;

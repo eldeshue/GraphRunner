@@ -4,6 +4,7 @@
 
 #include <Volk/volk.h>
 
+#include <exception>
 #include <string>
 
 #include "Logger.h"

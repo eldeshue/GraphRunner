@@ -7,9 +7,15 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstring>
+#include <exception>
+#include <functional>
 #include <optional>
 #include <set>
+#include <sstream>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 #include "./PhysicalDeviceImpl.h"
 #include "RhiConfig.h"
@@ -26,7 +32,9 @@ using namespace GraphRunner::Util;
 
 VkResult InstanceImpl::volk_init_result = volkInitialize( );
 
-static void check_profile_support(
+namespace {
+
+void check_profile_support(
     VpCapabilities const& cap,
     VpProfileProperties const& profile
 ) {
@@ -43,7 +51,7 @@ static void check_profile_support(
     }
 }
 
-static bool check_portability_support( ) {
+bool check_portability_support( ) {
     uint32_t cnt = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &cnt, nullptr);
     std::vector<VkExtensionProperties> supported_ext(cnt);
@@ -68,8 +76,7 @@ static bool check_portability_support( ) {
     );
 }
 
-static void check_ext_support(std::vector<char const*> const& required_ext_names
-) {
+void check_ext_support(std::vector<char const*> const& required_ext_names) {
     // get number of supported ext
     uint32_t cnt = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &cnt, nullptr);
@@ -112,8 +119,7 @@ static void check_ext_support(std::vector<char const*> const& required_ext_names
     }
 }
 
-static void
-check_layer_support(std::vector<char const*> const& required_layer_names) {
+void check_layer_support(std::vector<char const*> const& required_layer_names) {
     // get number of supported ext
     uint32_t cnt = 0;
     vkEnumerateInstanceLayerProperties(&cnt, nullptr);
@@ -153,7 +159,7 @@ check_layer_support(std::vector<char const*> const& required_layer_names) {
     }
 }
 
-static std::vector<char const*> get_final_extension(
+std::vector<char const*> get_final_extension(
     std::vector<std::string_view> const& ext_names,
     VpCapabilities const& cap,
     VpProfileProperties const& profile
@@ -198,7 +204,7 @@ static std::vector<char const*> get_final_extension(
     return result;
 }
 
-static std::vector<char const*>
+std::vector<char const*>
 get_final_layer(std::vector<std::string_view> const& l_names) {
     // there is no layer in the profile, do nothing
     // transform
@@ -274,7 +280,7 @@ static void set_debug_messenger_ci(VkDebugUtilsMessengerCreateInfoEXT& ci) {
 }
 #endif
 
-static void set_vp_func_instance_with_volk(VpVulkanFunctions& functions) {
+void set_vp_func_instance_with_volk(VpVulkanFunctions& functions) {
     // set func ptr with volk loaded functions
     // instance has not been created,
     // so only initialize instance related functions
@@ -297,6 +303,8 @@ static void set_vp_func_instance_with_volk(VpVulkanFunctions& functions) {
         vkGetPhysicalDeviceQueueFamilyProperties2;
      */
 }
+
+} // namespace
 
 InstanceImpl::InstanceImpl(
     std::string_view app_name,
@@ -404,7 +412,9 @@ InstanceImpl::~InstanceImpl( ) {
     // volk finalize is not necessary
 }
 
-static std::uint64_t scoring_gpu_type(VkPhysicalDeviceType type) {
+namespace {
+
+std::uint64_t scoring_gpu_type(VkPhysicalDeviceType type) {
     switch ( type ) {
         case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
             return 5;
@@ -422,7 +432,7 @@ static std::uint64_t scoring_gpu_type(VkPhysicalDeviceType type) {
 }
 
 // scoring gpu for general purpose, pc desktop enviornment
-static std::uint64_t scoring_gpu(VkPhysicalDevice const& gpu) {
+std::uint64_t scoring_gpu(VkPhysicalDevice const& gpu) {
     std::uint64_t result = 0;
 
     // gpu type
@@ -453,6 +463,8 @@ static std::uint64_t scoring_gpu(VkPhysicalDevice const& gpu) {
 
     return result;
 }
+
+} // namespace
 
 std::optional<GraphRunner::Rhi::PhysicalDevice>
 InstanceImpl::create_single_physical_device_with_best_vram( ) const {
