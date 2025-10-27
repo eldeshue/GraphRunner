@@ -29,6 +29,7 @@ namespace Rhi {
             ~PhysicalDeviceImpl( );
 
             // get property
+            void log_info( ) const;
         };
     } // namespace Impl
 } // namespace Rhi

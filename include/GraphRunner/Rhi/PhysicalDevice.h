@@ -28,6 +28,7 @@ namespace Rhi {
         PhysicalDevice& operator=(PhysicalDevice&& other) noexcept;
 
         // get property of the physical device
+        void log_info( ) const;
 
         // create logical device
     };

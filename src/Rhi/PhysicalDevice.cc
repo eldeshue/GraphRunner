@@ -28,3 +28,7 @@ PhysicalDevice& PhysicalDevice::operator=(PhysicalDevice&& other) noexcept {
     }
     return *this;
 }
+
+void PhysicalDevice::log_info( ) const {
+    return _impl->log_info( );
+}
