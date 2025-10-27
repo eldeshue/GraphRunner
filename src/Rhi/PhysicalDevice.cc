@@ -16,7 +16,9 @@ PhysicalDevice::~PhysicalDevice( ) {
 }
 
 PhysicalDevice::PhysicalDevice(PhysicalDevice&& other) noexcept :
-    _impl(other._impl) {}
+    _impl(other._impl) {
+    other._impl = nullptr;
+}
 
 PhysicalDevice& PhysicalDevice::operator=(PhysicalDevice&& other) noexcept {
     if ( this != &other ) {

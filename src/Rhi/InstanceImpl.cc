@@ -428,12 +428,16 @@ static std::uint64_t scoring_gpu(VkPhysicalDevice const& gpu) {
     // gpu type
     // prefer discrete gpu
     VkPhysicalDeviceProperties2 prop2 { };
+    prop2.pNext = nullptr;
+    prop2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
     vkGetPhysicalDeviceProperties2(gpu, &prop2);
     result |= (scoring_gpu_type(prop2.properties.deviceType) << 60);
 
     // vram size
     // prefer large size
     VkPhysicalDeviceMemoryProperties2 mem_prop2 { };
+    mem_prop2.pNext = nullptr;
+    mem_prop2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2;
     vkGetPhysicalDeviceMemoryProperties2(gpu, &mem_prop2);
     VkDeviceSize vram_size = 0;
     for ( uint32_t i = 0; i < mem_prop2.memoryProperties.memoryHeapCount;
