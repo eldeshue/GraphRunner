@@ -1,8 +1,11 @@
 ﻿
-#include <GraphRunner/Rhi/Instance.h>
+#include <GraphRunner/Rhi/Device.h>
 #include <GraphRunner/Rhi/PhysicalDevice.h>
 
+#include <optional>
+#include <string_view>
 #include <utility>
+#include <vector>
 
 #include "./PhysicalDeviceImpl.h"
 
@@ -31,4 +34,11 @@ PhysicalDevice& PhysicalDevice::operator=(PhysicalDevice&& other) noexcept {
 
 void PhysicalDevice::log_info( ) const {
     return _impl->log_info( );
+}
+
+std::optional<Device>
+PhysicalDevice::create_logical_device_with_single_graphic_queue(
+    std::vector<std::string_view> const& ext_names
+) const {
+    return _impl->create_logical_device_with_single_graphic_queue(ext_names);
 }

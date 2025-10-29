@@ -2,6 +2,10 @@
 #ifndef RHI_PHYSICAL_DEVICE_IMPL_H
 #define RHI_PHYSICAL_DEVICE_IMPL_H
 
+#include <optional>
+#include <string_view>
+#include <vector>
+
 // NOLINTBEGIN
 #include "Volk/volk.h"
 
@@ -9,6 +13,8 @@
 
 namespace GraphRunner {
 namespace Rhi {
+    class Device;
+
     namespace Impl {
         class PhysicalDeviceImpl {
           private:
@@ -31,6 +37,11 @@ namespace Rhi {
 
             // get property
             void log_info( ) const;
+
+            std::optional<Device>
+            create_logical_device_with_single_graphic_queue(
+                std::vector<std::string_view> const& ext_names
+            ) const;
         };
     } // namespace Impl
 } // namespace Rhi
