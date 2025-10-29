@@ -34,7 +34,43 @@ VkResult InstanceImpl::volk_init_result = volkInitialize( );
 
 namespace {
 
-void check_profile_support(
+void set_vp_func_instance_with_volk(VpVulkanFunctions& functions) {
+    // set func ptr with volk loaded functions
+    // if instance has not been created,
+    // only initialize instance related functions
+    // after instance creation, than all the functions will be fully initialized
+    functions.EnumerateInstanceVersion = vkEnumerateInstanceVersion;
+    functions.EnumerateInstanceExtensionProperties =
+        vkEnumerateInstanceExtensionProperties;
+    functions.GetInstanceProcAddr = vkGetInstanceProcAddr;
+    functions.CreateInstance = vkCreateInstance;
+
+    // following functions will be initialized after volk load instance
+    functions.CreateDevice = vkCreateDevice;
+    functions.GetDeviceProcAddr = vkGetDeviceProcAddr;
+    functions.EnumerateDeviceExtensionProperties =
+        vkEnumerateDeviceExtensionProperties;
+    functions.GetPhysicalDeviceFeatures2 = vkGetPhysicalDeviceFeatures2;
+    functions.GetPhysicalDeviceProperties2 = vkGetPhysicalDeviceProperties2;
+    functions.GetPhysicalDeviceFormatProperties2 =
+        vkGetPhysicalDeviceFormatProperties2;
+    functions.GetPhysicalDeviceQueueFamilyProperties2 =
+        vkGetPhysicalDeviceQueueFamilyProperties2;
+}
+
+void set_vp_capabilities(VpCapabilities& cap) {
+    VpVulkanFunctions volk_initialized_functions = { };
+    set_vp_func_instance_with_volk(volk_initialized_functions);
+
+    VpCapabilitiesCreateInfo vp_cap_ci = { };
+    vp_cap_ci.apiVersion = RHI_VULKAN_API_VERSION;
+    vp_cap_ci.flags = 0;
+    vp_cap_ci.pVulkanFunctions = &volk_initialized_functions;
+
+    vpCreateCapabilities(&vp_cap_ci, nullptr, &cap);
+}
+
+void check_instance_profile_support(
     VpCapabilities const& cap,
     VpProfileProperties const& profile
 ) {
@@ -279,31 +315,6 @@ static void set_debug_messenger_ci(VkDebugUtilsMessengerCreateInfoEXT& ci) {
     ci.pfnUserCallback = debug_messenger_logging_callback;
 }
 #endif
-
-void set_vp_func_instance_with_volk(VpVulkanFunctions& functions) {
-    // set func ptr with volk loaded functions
-    // instance has not been created,
-    // so only initialize instance related functions
-    functions.EnumerateInstanceVersion = vkEnumerateInstanceVersion;
-    functions.EnumerateInstanceExtensionProperties =
-        vkEnumerateInstanceExtensionProperties;
-    functions.GetInstanceProcAddr = vkGetInstanceProcAddr;
-    functions.CreateInstance = vkCreateInstance;
-    /*
-    // device related vp functions, not loaded yet
-    functions.CreateDevice = vkCreateDevice;
-    functions.GetDeviceProcAddr = vkGetDeviceProcAddr;
-    functions.EnumerateDeviceExtensionProperties =
-        vkEnumerateDeviceExtensionProperties;
-    functions.GetPhysicalDeviceFeatures2 = vkGetPhysicalDeviceFeatures2;
-    functions.GetPhysicalDeviceProperties2 = vkGetPhysicalDeviceProperties2;
-    functions.GetPhysicalDeviceFormatProperties2 =
-        vkGetPhysicalDeviceFormatProperties2;
-    functions.GetPhysicalDeviceQueueFamilyProperties2 =
-        vkGetPhysicalDeviceQueueFamilyProperties2;
-     */
-}
-
 } // namespace
 
 InstanceImpl::InstanceImpl(
@@ -328,22 +339,13 @@ InstanceImpl::InstanceImpl(
 
     // ----------------- instance creation -------------- //
     // profile creation
-    VpVulkanFunctions volk_initialized_functions = { };
-    set_vp_func_instance_with_volk(volk_initialized_functions);
-
-    VpCapabilitiesCreateInfo vp_cap_ci = { };
-    vp_cap_ci.apiVersion = RHI_VULKAN_API_VERSION;
-    vp_cap_ci.flags = 0;
-    vp_cap_ci.pVulkanFunctions = &volk_initialized_functions;
-
     VpCapabilities vp_cap = { };
-    // does not check vpCreateCap.. because volk does not fully loaded...
-    vpCreateCapabilities(&vp_cap_ci, nullptr, &vp_cap);
+    set_vp_capabilities(vp_cap);
     VpProfileProperties profile {
         RHI_VULKAN_PROFILE_NAME,
         RHI_VULKAN_PROFILE_SPEC_VERSION
     };
-    check_profile_support(vp_cap, profile);
+    check_instance_profile_support(vp_cap, profile);
 
     // merge extension from profile
     auto layers = get_final_layer(required_laye_names);
@@ -464,6 +466,29 @@ std::uint64_t scoring_gpu(VkPhysicalDevice const& gpu) {
     return result;
 }
 
+bool check_device_profile_support(
+    VkInstance instance,
+    VkPhysicalDevice device
+) {
+    VpCapabilities vp_cap = { };
+    set_vp_capabilities(vp_cap);
+    VpProfileProperties profile {
+        RHI_VULKAN_PROFILE_NAME,
+        RHI_VULKAN_PROFILE_SPEC_VERSION
+    };
+
+    // check support
+    VkBool32 is_supported = VK_FALSE;
+    VkResult result = vpGetPhysicalDeviceProfileSupport(
+        vp_cap,
+        instance,
+        device,
+        &profile,
+        &is_supported
+    );
+    return (result == VK_SUCCESS && is_supported == VK_TRUE);
+}
+
 } // namespace
 
 std::optional<GraphRunner::Rhi::PhysicalDevice>
@@ -500,6 +525,11 @@ InstanceImpl::create_single_physical_device_with_best_vram( ) const {
         sort_buffer.end( ),
         std::greater<std::pair<std::uint64_t, VkPhysicalDevice>>( )
     );
+
+    // vulkan profile support check
+    if ( !check_device_profile_support(_instance, sort_buffer[0].second) ) {
+        return std::nullopt;
+    }
 
     // init
     // highest score at index 0

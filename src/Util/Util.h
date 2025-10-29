@@ -2,7 +2,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <Volk/volk.h>
+// NOLINTBEGIN
+#include "Volk/volk.h"
+// NOLINTEND
 
 #include <exception>
 #include <string>
