@@ -24,7 +24,7 @@ using namespace GraphRunner::Rhi;
 using namespace GraphRunner::Rhi::Impl;
 using namespace GraphRunner::Util;
 
-PhysicalDeviceImpl::PhysicalDeviceImpl( ) : _pdvc { } {}
+PhysicalDeviceImpl::PhysicalDeviceImpl( ) : _handle { } {}
 
 PhysicalDeviceImpl::~PhysicalDeviceImpl( ) {}
 
@@ -218,10 +218,10 @@ void log_device_queue_families(VkPhysicalDevice device) {
 } // namespace
 
 void PhysicalDeviceImpl::log_info( ) const {
-    log_device_properties(_pdvc);
-    log_device_features(_pdvc);
-    log_device_memories(_pdvc);
-    log_device_queue_families(_pdvc);
+    log_device_properties(_handle);
+    log_device_features(_handle);
+    log_device_memories(_handle);
+    log_device_queue_families(_handle);
 }
 
 namespace {
@@ -454,7 +454,7 @@ PhysicalDeviceImpl::create_logical_device_with_single_graphic_queue(
     // select queue family to use
     // select single graphic queue
     std::vector<VkDeviceQueueCreateInfo> queue_cis;
-    add_queue_ci(_pdvc, queue_cis, VK_QUEUE_GRAPHICS_BIT, 1);
+    add_queue_ci(_handle, queue_cis, VK_QUEUE_GRAPHICS_BIT, 1);
 
     // device extension check
     // profile library?
@@ -470,7 +470,7 @@ PhysicalDeviceImpl::create_logical_device_with_single_graphic_queue(
 
     // extension support check
     // profile support is already checked
-    if ( !check_device_ext_support(_pdvc, non_profile_ext_names) ) {
+    if ( !check_device_ext_support(_handle, non_profile_ext_names) ) {
         return std::nullopt;
     }
 
@@ -493,13 +493,17 @@ PhysicalDeviceImpl::create_logical_device_with_single_graphic_queue(
     vp_dev_ci.pCreateInfo = &device_ci;
     vp_dev_ci.enabledFullProfileCount = 1;
     vp_dev_ci.pEnabledFullProfiles = &profile;
-    check(
-        vpCreateDevice(vp_cap, _pdvc, &vp_dev_ci, nullptr, &result._impl->_dvc)
-    );
+    check(vpCreateDevice(
+        vp_cap,
+        _handle,
+        &vp_dev_ci,
+        nullptr,
+        &result._impl->_handle
+    ));
 
     // volk load device
     // single device application only
-    volkLoadDevice(result._impl->_dvc);
+    volkLoadDevice(result._impl->_handle);
 
     return result;
 }

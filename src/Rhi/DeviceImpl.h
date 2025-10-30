@@ -22,7 +22,7 @@ namespace Rhi {
             friend class PhysicalDeviceImpl;
 
             // handle
-            VkDevice _dvc;
+            VkDevice _handle;
 
             // queue data
             uint32_t graphic_queue_limit;

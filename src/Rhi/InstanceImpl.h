@@ -30,12 +30,10 @@ namespace Rhi {
             static VkResult volk_init_result;
 
             // instance or DXGIFactory
-            using InstanceImplHandle = VkInstance;
-            InstanceImplHandle _instance;
+            VkInstance _handle;
 
 #ifdef ENABLE_VULKAN_VALIDATION
-            using DebugHandle = VkDebugUtilsMessengerEXT;
-            DebugHandle _dbg_messenger;
+            VkDebugUtilsMessengerEXT _dbg_messenger;
 #endif
 
           public:

@@ -9,7 +9,7 @@ using namespace GraphRunner::Rhi::Impl;
 
 // Physical device is the factory
 DeviceImpl::DeviceImpl( ) :
-    _dvc { },
+    _handle { },
     graphic_queue_limit { },
     graphic_queue_cnt { },
     compute_queue_limit { },
@@ -18,7 +18,7 @@ DeviceImpl::DeviceImpl( ) :
     transfer_queue_cnt { } {}
 
 DeviceImpl::~DeviceImpl( ) {
-    vkDestroyDevice(_dvc, nullptr);
+    vkDestroyDevice(_handle, nullptr);
 }
 
 uint32_t DeviceImpl::get_graphic_queue_limit( ) const {

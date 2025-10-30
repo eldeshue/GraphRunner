@@ -28,7 +28,7 @@ namespace Rhi {
             friend class InstanceImpl;
 
             // handle
-            VkPhysicalDevice _pdvc;
+            VkPhysicalDevice _handle;
 
             PhysicalDeviceImpl( );
 

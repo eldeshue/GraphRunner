@@ -323,7 +323,7 @@ InstanceImpl::InstanceImpl(
     std::vector<std::string_view> const& required_ext_names,
     std::vector<std::string_view> const& required_laye_names
 ) :
-    _instance { }
+    _handle { }
 #ifdef ENABLE_VULKAN_VALIDATION
     ,
     _dbg_messenger { }
@@ -388,17 +388,17 @@ InstanceImpl::InstanceImpl(
     instance_ci.ppEnabledLayerNames = layers.data( );
     instance_ci.enabledExtensionCount = extensions.size( );
     instance_ci.ppEnabledExtensionNames = extensions.data( );
-    check(vkCreateInstance(&instance_ci, nullptr, &_instance));
+    check(vkCreateInstance(&instance_ci, nullptr, &_handle));
 
     // load api functions with volk
-    volkLoadInstance(_instance);
+    volkLoadInstance(_handle);
 
     // ----------------- instance creation -------------- //
 
 #ifdef ENABLE_VULKAN_VALIDATION
     // messenger create
     check(vkCreateDebugUtilsMessengerEXT(
-        _instance,
+        _handle,
         &debug_messenger_ci,
         nullptr,
         &_dbg_messenger
@@ -408,9 +408,9 @@ InstanceImpl::InstanceImpl(
 
 InstanceImpl::~InstanceImpl( ) {
 #ifdef ENABLE_VULKAN_VALIDATION
-    vkDestroyDebugUtilsMessengerEXT(_instance, _dbg_messenger, nullptr);
+    vkDestroyDebugUtilsMessengerEXT(_handle, _dbg_messenger, nullptr);
 #endif
-    vkDestroyInstance(_instance, nullptr);
+    vkDestroyInstance(_handle, nullptr);
     // volk finalize is not necessary
 }
 
@@ -500,12 +500,12 @@ InstanceImpl::create_single_physical_device_with_best_vram( ) const {
     // fill the object
     // pick discrete gpu, with largest vram
     uint32_t gpuCount = 0;
-    check(vkEnumeratePhysicalDevices(_instance, &gpuCount, nullptr));
+    check(vkEnumeratePhysicalDevices(_handle, &gpuCount, nullptr));
     if ( gpuCount == 0 ) {
         return std::nullopt;
     }
     std::vector<VkPhysicalDevice> devices(gpuCount);
-    check(vkEnumeratePhysicalDevices(_instance, &gpuCount, devices.data( )));
+    check(vkEnumeratePhysicalDevices(_handle, &gpuCount, devices.data( )));
 
     // sort gpu by property
     // discrete, integrated, cpu, virtual, other
@@ -527,13 +527,13 @@ InstanceImpl::create_single_physical_device_with_best_vram( ) const {
     );
 
     // vulkan profile support check
-    if ( !check_device_profile_support(_instance, sort_buffer[0].second) ) {
+    if ( !check_device_profile_support(_handle, sort_buffer[0].second) ) {
         return std::nullopt;
     }
 
     // init
     // highest score at index 0
-    result._impl->_pdvc = sort_buffer[0].second;
+    result._impl->_handle = sort_buffer[0].second;
 
     // return
     return result;
