@@ -2,6 +2,8 @@
 #ifndef RHI_DEVICE
 #define RHI_DEVICE
 
+#include <cstdint>
+
 namespace GraphRunner {
 namespace Rhi {
     namespace Impl {
