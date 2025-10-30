@@ -29,6 +29,12 @@ namespace Rhi {
         Device& operator=(Device&& other) noexcept;
 
         // get property of the device
+        uint32_t get_graphic_queue_limit( ) const;
+        uint32_t get_graphic_queue_cnt( ) const;
+        uint32_t get_compute_queue_limit( ) const;
+        uint32_t get_compute_queue_cnt( ) const;
+        uint32_t get_transfer_queue_limit( ) const;
+        uint32_t get_transfer_queue_cnt( ) const;
 
         // create queue
     };

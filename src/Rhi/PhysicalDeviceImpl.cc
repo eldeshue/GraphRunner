@@ -441,6 +441,7 @@ PhysicalDeviceImpl::create_logical_device_with_single_graphic_queue(
 ) const {
     Device result;
     result._impl = new DeviceImpl;
+    result._impl->graphic_queue_limit = 1; // create single graphic queue
 
     // using profile library
     VpCapabilities vp_cap { };

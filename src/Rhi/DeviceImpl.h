@@ -24,12 +24,26 @@ namespace Rhi {
             // handle
             VkDevice _dvc;
 
+            // queue data
+            uint32_t graphic_queue_limit;
+            uint32_t graphic_queue_cnt;
+            uint32_t compute_queue_limit;
+            uint32_t compute_queue_cnt;
+            uint32_t transfer_queue_limit;
+            uint32_t transfer_queue_cnt;
+
             DeviceImpl( );
 
           public:
             ~DeviceImpl( );
 
             // get property
+            uint32_t get_graphic_queue_limit( ) const;
+            uint32_t get_graphic_queue_cnt( ) const;
+            uint32_t get_compute_queue_limit( ) const;
+            uint32_t get_compute_queue_cnt( ) const;
+            uint32_t get_transfer_queue_limit( ) const;
+            uint32_t get_transfer_queue_cnt( ) const;
         };
     } // namespace Impl
 } // namespace Rhi
