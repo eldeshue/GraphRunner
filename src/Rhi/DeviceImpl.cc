@@ -33,8 +33,7 @@ int32_t find_queue_family_info_index(
     for ( uint32_t i = 0; i < queue_infos.size( ); ++i ) {
         auto const& [queue_family_prop, queue_ci, used_cnt] = queue_infos[i];
         if ( (queue_family_prop.queueFlags & type) == type // type match
-             && (used_cnt < queue_family_prop.queueCount
-             ) ) { // create available
+             && (used_cnt < queue_ci.queueCount) ) { // create available
             return i;
         }
     }
@@ -44,8 +43,7 @@ int32_t find_queue_family_info_index(
         auto const& [queue_family_prop, queue_ci, used_cnt] = queue_infos[i];
         if ( (queue_family_prop.queueFlags & VK_QUEUE_GRAPHICS_BIT)
                  == VK_QUEUE_GRAPHICS_BIT // type match
-             && (used_cnt < queue_family_prop.queueCount
-             ) ) { // create available
+             && (used_cnt < queue_ci.queueCount) ) { // create available
             return i;
         }
     }
@@ -66,11 +64,6 @@ std::optional<Queue> DeviceImpl::create_queue_with_flags(VkQueueFlags flags) {
     }
     auto& [queue_family_prop, queue_ci, used_cnt] = _queue_infos[i];
     result._impl->_info = &queue_family_prop;
-
-    // used queue check
-    if ( used_cnt == queue_ci.queueCount ) { // all queue used
-        return std::nullopt;
-    }
 
     // init queue
     VkDeviceQueueInfo2 ci = { };
