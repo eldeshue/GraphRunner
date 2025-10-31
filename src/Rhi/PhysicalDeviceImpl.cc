@@ -305,7 +305,13 @@ uint32_t find_queue_family_index(
 }
 
 // device queue create info
-void add_queue_ci(
+/*
+    문제 1 : 해당 함수를 호출할 때 마다, queue family를 쿼리해오는데, 굉장히 비효율적임.
+    문제 2 : queue_cnt 만큼 큐를 가진 queue family가 존재하지 않을 수 있음, 현재는 모자란대로 그대로 감.
+
+    이러한 이유로  add_queue_ci를 재활용하기 위해서는 리팩토링 필요함.
+*/
+void add_queue_ci_with_family(
     VkPhysicalDevice pdvc,
     VkQueueFlags flags,
     uint32_t queue_cnt,
@@ -465,7 +471,7 @@ PhysicalDeviceImpl::create_logical_device_with_single_graphic_queue(
     // select single graphic queue
     std::vector<VkDeviceQueueCreateInfo> queue_cis;
     std::vector<VkQueueFamilyProperties> selected_queue_family;
-    add_queue_ci(
+    add_queue_ci_with_family(
         _handle,
         VK_QUEUE_GRAPHICS_BIT,
         1,
