@@ -3,9 +3,12 @@
 
 #include <GraphRunner/Rhi/Device.h>
 
+#include <algorithm>
 #include <iterator>
 #include <set>
 #include <string_view>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 #include "./DeviceImpl.h"
@@ -304,9 +307,10 @@ uint32_t find_queue_family_index(
 // device queue create info
 void add_queue_ci(
     VkPhysicalDevice pdvc,
-    std::vector<VkDeviceQueueCreateInfo>& queue_cis,
     VkQueueFlags flags,
-    uint32_t queue_cnt
+    uint32_t queue_cnt,
+    std::vector<VkDeviceQueueCreateInfo>& queue_cis,
+    std::vector<VkQueueFamilyProperties>& selected_queue_family
 ) {
     // query queue family properties
     // querying properties per every call can cause waste...
@@ -330,11 +334,18 @@ void add_queue_ci(
     que_ci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     que_ci.pNext = nullptr;
     que_ci.pQueuePriorities = &pq;
-    que_ci.queueCount = queue_cnt;
     que_ci.queueFamilyIndex = find_queue_family_index(que_family_props, flags);
+    que_ci.queueCount = std::min(
+        queue_cnt, // try to get
+        que_family_props[que_ci.queueFamilyIndex]
+            .queueFamilyProperties.queueCount // actual limit
+    );
 
     // transfer
     queue_cis.push_back(que_ci);
+    selected_queue_family.push_back(
+        que_family_props[que_ci.queueFamilyIndex].queueFamilyProperties
+    );
 }
 
 // device extensions
@@ -441,7 +452,6 @@ PhysicalDeviceImpl::create_logical_device_with_single_graphic_queue(
 ) const {
     Device result;
     result._impl = new DeviceImpl;
-    result._impl->graphic_queue_limit = 1; // create single graphic queue
 
     // using profile library
     VpCapabilities vp_cap { };
@@ -454,7 +464,14 @@ PhysicalDeviceImpl::create_logical_device_with_single_graphic_queue(
     // select queue family to use
     // select single graphic queue
     std::vector<VkDeviceQueueCreateInfo> queue_cis;
-    add_queue_ci(_handle, queue_cis, VK_QUEUE_GRAPHICS_BIT, 1);
+    std::vector<VkQueueFamilyProperties> selected_queue_family;
+    add_queue_ci(
+        _handle,
+        VK_QUEUE_GRAPHICS_BIT,
+        1,
+        queue_cis,
+        selected_queue_family
+    );
 
     // device extension check
     // profile library?
@@ -489,6 +506,7 @@ PhysicalDeviceImpl::create_logical_device_with_single_graphic_queue(
     device_ci.pEnabledFeatures = nullptr; // use device feature2 instead
     device_ci.pNext = nullptr; // if there are additinal features, add here
 
+    // init handle
     VpDeviceCreateInfo vp_dev_ci { };
     vp_dev_ci.pCreateInfo = &device_ci;
     vp_dev_ci.enabledFullProfileCount = 1;
@@ -500,6 +518,13 @@ PhysicalDeviceImpl::create_logical_device_with_single_graphic_queue(
         nullptr,
         &result._impl->_handle
     ));
+    // init queue infos
+    // save queue family information
+    for ( int i = 0; i < queue_cis.size( ); ++i ) {
+        result._impl->_queue_infos.push_back(
+            std::make_tuple(selected_queue_family[i], queue_cis[i], 0)
+        );
+    }
 
     // volk load device
     // single device application only
