@@ -3,6 +3,7 @@
 #define RHI_DEVICE
 
 #include <cstdint>
+#include <optional>
 
 namespace GraphRunner {
 namespace Rhi {
@@ -10,6 +11,8 @@ namespace Rhi {
         class DeviceImpl;
         class PhysicalDeviceImpl;
     } // namespace Impl
+
+    class Queue;
 
     class Device {
       private:
@@ -30,15 +33,10 @@ namespace Rhi {
         Device(Device&& other) noexcept;
         Device& operator=(Device&& other) noexcept;
 
-        // get property of the device
-        uint32_t get_graphic_queue_limit( ) const;
-        uint32_t get_graphic_queue_cnt( ) const;
-        uint32_t get_compute_queue_limit( ) const;
-        uint32_t get_compute_queue_cnt( ) const;
-        uint32_t get_transfer_queue_limit( ) const;
-        uint32_t get_transfer_queue_cnt( ) const;
-
         // create queue
+        std::optional<Queue> create_graphics_queue( );
+        std::optional<Queue> create_compute_queue( );
+        std::optional<Queue> create_transfer_queue( );
     };
 } // namespace Rhi
 } // namespace GraphRunner

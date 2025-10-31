@@ -7,8 +7,14 @@
 
 // NOLINTEND
 
+#include <optional>
+#include <tuple>
+#include <vector>
+
 namespace GraphRunner {
 namespace Rhi {
+    class Queue;
+
     namespace Impl {
         class DeviceImpl {
           private:
@@ -24,26 +30,24 @@ namespace Rhi {
             // handle
             VkDevice _handle;
 
-            // queue data
-            uint32_t graphic_queue_limit;
-            uint32_t graphic_queue_cnt;
-            uint32_t compute_queue_limit;
-            uint32_t compute_queue_cnt;
-            uint32_t transfer_queue_limit;
-            uint32_t transfer_queue_cnt;
+            // queu info
+            // queue family properties, queue creation info, created queue count
+            using QueuInfo = std::tuple<
+                VkQueueFamilyProperties,
+                VkDeviceQueueCreateInfo,
+                uint32_t>;
+            std::vector<QueuInfo> _queue_infos;
 
             DeviceImpl( );
 
           public:
             ~DeviceImpl( );
 
-            // get property
-            uint32_t get_graphic_queue_limit( ) const;
-            uint32_t get_graphic_queue_cnt( ) const;
-            uint32_t get_compute_queue_limit( ) const;
-            uint32_t get_compute_queue_cnt( ) const;
-            uint32_t get_transfer_queue_limit( ) const;
-            uint32_t get_transfer_queue_cnt( ) const;
+            // create queue
+            std::optional<Queue> create_queue_with_flags(VkQueueFlags flags);
+            std::optional<Queue> create_graphics_queue( );
+            std::optional<Queue> create_compute_queue( );
+            std::optional<Queue> create_transfer_queue( );
         };
     } // namespace Impl
 } // namespace Rhi

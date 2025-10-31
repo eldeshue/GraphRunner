@@ -1,7 +1,9 @@
 ﻿
 #include <GraphRunner/Rhi/Device.h>
+#include <GraphRunner/Rhi/Queue.h>
 
 #include <cstddef>
+#include <optional>
 #include <utility>
 
 #include "./DeviceImpl.h"
@@ -26,26 +28,14 @@ Device& Device::operator=(Device&& other) noexcept {
     return *this;
 }
 
-uint32_t Device::get_graphic_queue_limit( ) const {
-    return _impl->get_graphic_queue_limit( );
+std::optional<Queue> Device::create_graphics_queue( ) {
+    return _impl->create_graphics_queue( );
 }
 
-uint32_t Device::get_graphic_queue_cnt( ) const {
-    return _impl->get_graphic_queue_cnt( );
+std::optional<Queue> Device::create_compute_queue( ) {
+    return _impl->create_compute_queue( );
 }
 
-uint32_t Device::get_compute_queue_limit( ) const {
-    return _impl->get_compute_queue_limit( );
-}
-
-uint32_t Device::get_compute_queue_cnt( ) const {
-    return _impl->get_compute_queue_cnt( );
-}
-
-uint32_t Device::get_transfer_queue_limit( ) const {
-    return _impl->get_transfer_queue_limit( );
-}
-
-uint32_t Device::get_transfer_queue_cnt( ) const {
-    return _impl->get_transfer_queue_cnt( );
+std::optional<Queue> Device::create_transfer_queue( ) {
+    return _impl->create_transfer_queue( );
 }

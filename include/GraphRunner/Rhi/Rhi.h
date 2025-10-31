@@ -8,5 +8,6 @@
 #include "./Device.h"
 #include "./Instance.h"
 #include "./PhysicalDevice.h"
+#include "./Queue.h"
 
 #endif
