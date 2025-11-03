@@ -7,7 +7,7 @@
 #include <vector>
 
 // NOLINTBEGIN
-#include "Volk/volk.h"
+#include "GraphicsApiCore.h"
 
 // NOLINTEND
 

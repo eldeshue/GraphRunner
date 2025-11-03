@@ -8,7 +8,7 @@
 #include "./QueueImpl.h"
 
 // NOLINTBEGIN
-#include "Volk/volk.h"
+#include "GraphicsApiCore.h"
 // NOLINTEND
 
 using namespace GraphRunner::Rhi::Impl;

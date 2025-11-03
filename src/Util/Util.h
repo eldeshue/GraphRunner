@@ -3,7 +3,7 @@
 #define UTILS_H
 
 // NOLINTBEGIN
-#include "Volk/volk.h"
+#include "GraphicsApiCore.h"
 // NOLINTEND
 
 #include <exception>

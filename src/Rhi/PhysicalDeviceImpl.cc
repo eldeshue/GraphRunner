@@ -17,10 +17,7 @@
 #include "Util.h"
 
 // NOLINTBEGIN
-#define VP_USE_OBJECT
-#include <VulkanProfiles/vulkan_profiles.hpp>
-
-#include "Volk/volk.h"
+#include "GraphicsApiCore.h"
 // NOLINTEND
 
 using namespace GraphRunner::Rhi;

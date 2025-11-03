@@ -1,5 +1,5 @@
 ﻿
-#include "./Util.h"
+#include "Util.h"
 
 namespace GraphRunner {
 namespace Util {

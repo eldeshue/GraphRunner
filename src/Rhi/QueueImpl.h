@@ -3,7 +3,7 @@
 #define RHI_QUEUE_IMPL_H
 
 // NOLINTBEGIN
-#include "Volk/volk.h"
+#include "GraphicsApiCore.h"
 
 // NOLINTEND
 
