@@ -3,8 +3,7 @@
 # 현재 디렉토리에 있는 모든 파일을 SRC_FILES 변수에 추가한다.
 file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
   ${CMAKE_CURRENT_SOURCE_DIR}/*.cc
-  ${CMAKE_CURRENT_SOURCE_DIR}/Util/*.cc
-  ${CMAKE_CURRENT_SOURCE_DIR}/Rhi/*.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/*.h
 )
 
 # 프로젝트가 실행 바이너리
@@ -54,7 +53,7 @@ target_compile_options(GraphRunner PRIVATE
 set(VULKAN_SDK_INCLUDE_DIR "$ENV{VULKAN_SDK}/Include")
 set(VULKAN_SDK_LIBRARY_DIR "$ENV{VULKAN_SDK}/Lib")
 
-target_include_directories(GraphRunner PRIVATE
+target_include_directories(GraphRunner PUBLIC SYSTEM
     ${VULKAN_SDK_INCLUDE_DIR}
 )
 
