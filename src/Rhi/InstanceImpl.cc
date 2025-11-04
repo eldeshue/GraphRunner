@@ -452,6 +452,26 @@ bool check_device_profile_support(
     return (result == VK_SUCCESS && is_supported == VK_TRUE);
 }
 
+bool check_device_portability_support(VkPhysicalDevice device) {
+    uint32_t cnt = 0;
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &cnt, nullptr);
+    std::vector<VkExtensionProperties> props(cnt);
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &cnt, props.data( ));
+
+    std::string_view portability_ext_name("VK_KHR_portability_subset");
+    return (
+        std::find_if(
+            props.begin( ),
+            props.end( ),
+            [portability_ext_name](VkExtensionProperties const& ext_prop) {
+                return portability_ext_name
+                    == std::string_view(ext_prop.extensionName);
+            }
+        )
+        != props.end( ) // if end, not found
+    );
+}
+
 } // namespace
 
 std::optional<GraphRunner::Rhi::PhysicalDevice>
@@ -489,15 +509,21 @@ InstanceImpl::create_single_physical_device_with_best_vram( ) const {
         std::greater<std::pair<std::uint64_t, VkPhysicalDevice>>( )
     );
 
-    // vulkan profile support check
-    if ( !check_device_profile_support(_handle, sort_buffer[0].second) ) {
-        return std::nullopt;
+    for ( auto const& [_, device_handle] : sort_buffer ) {
+        // vulkan profile support check
+        if ( check_device_profile_support(_handle, device_handle)
+#ifdef ENABLE_VULKAN_PORTABILITY
+             && check_portability_support(device_handle)
+#endif
+        ) {
+            // init
+            // highest score at index 0
+            result._impl->_handle = device_handle;
+            return result;
+        }
     }
 
-    // init
-    // highest score at index 0
-    result._impl->_handle = sort_buffer[0].second;
-
     // return
-    return result;
+    // fail to found
+    return std::nullopt;
 }

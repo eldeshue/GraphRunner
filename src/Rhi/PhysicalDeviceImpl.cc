@@ -353,6 +353,11 @@ bool set_non_profile_device_extensions(
         }
     );
 
+#ifdef ENABLE_VULKAN_PORTABILITY
+    // if portability needed, add portability support extension
+    non_profile_ext_names.push_back("VK_KHR_portability_subset");
+#endif
+
     // compare, push back to non_profile_ext_names
     for ( auto const& ext_name : additional_ext_names ) {
         if ( profile_supported_names.find(ext_name)
