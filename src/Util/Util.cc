@@ -1,6 +1,32 @@
 ﻿
 #include "Util.h"
 
+#include "RhiConfig.h"
+
+void static set_vp_func_instance_with_volk(VpVulkanFunctions& functions) {
+    // set func ptr with volk loaded functions
+    // if instance has not been created,
+    // only initialize instance related functions
+    // after instance creation, than all the functions will be fully initialized
+    functions.EnumerateInstanceVersion = vkEnumerateInstanceVersion;
+    functions.EnumerateInstanceExtensionProperties =
+        vkEnumerateInstanceExtensionProperties;
+    functions.GetInstanceProcAddr = vkGetInstanceProcAddr;
+    functions.CreateInstance = vkCreateInstance;
+
+    // following functions will be initialized after volk load instance
+    functions.CreateDevice = vkCreateDevice;
+    functions.GetDeviceProcAddr = vkGetDeviceProcAddr;
+    functions.EnumerateDeviceExtensionProperties =
+        vkEnumerateDeviceExtensionProperties;
+    functions.GetPhysicalDeviceFeatures2 = vkGetPhysicalDeviceFeatures2;
+    functions.GetPhysicalDeviceProperties2 = vkGetPhysicalDeviceProperties2;
+    functions.GetPhysicalDeviceFormatProperties2 =
+        vkGetPhysicalDeviceFormatProperties2;
+    functions.GetPhysicalDeviceQueueFamilyProperties2 =
+        vkGetPhysicalDeviceQueueFamilyProperties2;
+}
+
 namespace GraphRunner {
 namespace Util {
 
@@ -114,6 +140,18 @@ namespace Util {
                 __LINE__
             );
         }
+    }
+
+    void set_vp_capabilities(VpCapabilities& cap) {
+        VpVulkanFunctions volk_initialized_functions = { };
+        set_vp_func_instance_with_volk(volk_initialized_functions);
+
+        VpCapabilitiesCreateInfo vp_cap_ci = { };
+        vp_cap_ci.apiVersion = RHI_VULKAN_API_VERSION;
+        vp_cap_ci.flags = 0;
+        vp_cap_ci.pVulkanFunctions = &volk_initialized_functions;
+
+        vpCreateCapabilities(&vp_cap_ci, nullptr, &cap);
     }
 } // namespace Util
 } // namespace GraphRunner

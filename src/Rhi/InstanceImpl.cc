@@ -31,42 +31,6 @@ VkResult InstanceImpl::volk_init_result = volkInitialize( );
 
 namespace {
 
-void set_vp_func_instance_with_volk(VpVulkanFunctions& functions) {
-    // set func ptr with volk loaded functions
-    // if instance has not been created,
-    // only initialize instance related functions
-    // after instance creation, than all the functions will be fully initialized
-    functions.EnumerateInstanceVersion = vkEnumerateInstanceVersion;
-    functions.EnumerateInstanceExtensionProperties =
-        vkEnumerateInstanceExtensionProperties;
-    functions.GetInstanceProcAddr = vkGetInstanceProcAddr;
-    functions.CreateInstance = vkCreateInstance;
-
-    // following functions will be initialized after volk load instance
-    functions.CreateDevice = vkCreateDevice;
-    functions.GetDeviceProcAddr = vkGetDeviceProcAddr;
-    functions.EnumerateDeviceExtensionProperties =
-        vkEnumerateDeviceExtensionProperties;
-    functions.GetPhysicalDeviceFeatures2 = vkGetPhysicalDeviceFeatures2;
-    functions.GetPhysicalDeviceProperties2 = vkGetPhysicalDeviceProperties2;
-    functions.GetPhysicalDeviceFormatProperties2 =
-        vkGetPhysicalDeviceFormatProperties2;
-    functions.GetPhysicalDeviceQueueFamilyProperties2 =
-        vkGetPhysicalDeviceQueueFamilyProperties2;
-}
-
-void set_vp_capabilities(VpCapabilities& cap) {
-    VpVulkanFunctions volk_initialized_functions = { };
-    set_vp_func_instance_with_volk(volk_initialized_functions);
-
-    VpCapabilitiesCreateInfo vp_cap_ci = { };
-    vp_cap_ci.apiVersion = RHI_VULKAN_API_VERSION;
-    vp_cap_ci.flags = 0;
-    vp_cap_ci.pVulkanFunctions = &volk_initialized_functions;
-
-    vpCreateCapabilities(&vp_cap_ci, nullptr, &cap);
-}
-
 void check_instance_profile_support(
     VpCapabilities const& cap,
     VpProfileProperties const& profile
@@ -109,7 +73,9 @@ bool check_portability_support( ) {
     );
 }
 
-void check_ext_support(std::vector<char const*> const& required_ext_names) {
+void check_instance_ext_support(
+    std::vector<char const*> const& required_ext_names
+) {
     // get number of supported ext
     uint32_t cnt = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &cnt, nullptr);
@@ -233,7 +199,7 @@ std::vector<char const*> get_final_extension(
         result.begin( ),
         [](std::string_view sv) { return sv.data( ); }
     );
-    check_ext_support(result);
+    check_instance_ext_support(result);
     return result;
 }
 
