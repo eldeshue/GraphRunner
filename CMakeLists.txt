@@ -34,6 +34,8 @@ enable_testing()
 add_subdirectory(src)		# actual implementation
 add_subdirectory(lib)		# actual implementation
 
+add_subdirectory(assets)    # various assets(shaders, textures, meshes...) for binaries
+
 # Don't even look at tests if we're not top level
 if(NOT PROJECT_IS_TOP_LEVEL)
   return()

@@ -12,3 +12,4 @@ file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
 
 add_executable(example ${SRC_FILES})
 target_link_libraries(example PRIVATE GraphRunner)
+add_dependencies(example AssetProcessing)

@@ -12,3 +12,4 @@ file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS
 
 add_executable(editor ${SRC_FILES})
 target_link_libraries(editor PRIVATE GraphRunner)
+add_dependencies(editor AssetProcessing)
