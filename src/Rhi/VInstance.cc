@@ -1,7 +1,6 @@
 ﻿
-#include "./InstanceImpl.h"
+#include "./VInstance.h"
 
-#include <GraphRunner/Rhi/PhysicalDevice.h>
 #include <Logger.h>
 #include <Util.h>
 
@@ -17,17 +16,17 @@
 #include <utility>
 #include <vector>
 
-#include "./PhysicalDeviceImpl.h"
+#include "./VPhysicalDevice.h"
 #include "RhiConfig.h"
 
 // NOLINTBEGIN
-#include "GraphicsApiCore.h"
+#include "./GraphicsApiCore.h"
 // NOLINTEND
 
-using namespace GraphRunner::Rhi::Impl;
+using namespace GraphRunner::Rhi;
 using namespace GraphRunner::Util;
 
-VkResult InstanceImpl::volk_init_result = volkInitialize( );
+VkResult VInstance::volk_init_result = volkInitialize( );
 
 namespace {
 
@@ -280,7 +279,16 @@ static void set_debug_messenger_ci(VkDebugUtilsMessengerCreateInfoEXT& ci) {
 #endif
 } // namespace
 
-InstanceImpl::InstanceImpl(
+VInstance::VInstance( ) :
+    _handle { }
+#ifdef ENABLE_VULKAN_VALIDATION
+    ,
+    _dbg_messenger { }
+#endif
+{
+}
+
+VInstance::VInstance(
     std::string_view app_name,
     std::string_view engine_name,
     std::vector<std::string_view> const& required_ext_names,
@@ -369,11 +377,38 @@ InstanceImpl::InstanceImpl(
 #endif
 }
 
-InstanceImpl::~InstanceImpl( ) {
+VInstance::VInstance(VInstance&& other) noexcept :
+    _handle(other._handle)
 #ifdef ENABLE_VULKAN_VALIDATION
-    vkDestroyDebugUtilsMessengerEXT(_handle, _dbg_messenger, nullptr);
+    ,
+    _dbg_messenger(other._dbg_messenger)
 #endif
-    vkDestroyInstance(_handle, nullptr);
+{
+    other._handle = VK_NULL_HANDLE;
+#ifdef ENABLE_VULKAN_VALIDATION
+    other._dbg_messenger = VK_NULL_HANDLE;
+#endif
+}
+
+VInstance& VInstance::operator=(VInstance&& other) noexcept {
+    if ( this != &other ) {
+        std::swap(_handle, other._handle);
+#ifdef ENABLE_VULKAN_VALIDATION
+        std::swap(_dbg_messenger, other._dbg_messenger);
+#endif
+    }
+    return *this;
+}
+
+VInstance::~VInstance( ) {
+#ifdef ENABLE_VULKAN_VALIDATION
+    if ( _handle != VK_NULL_HANDLE && _dbg_messenger != VK_NULL_HANDLE ) {
+        vkDestroyDebugUtilsMessengerEXT(_handle, _dbg_messenger, nullptr);
+    }
+#endif
+    if ( _handle != VK_NULL_HANDLE ) {
+        vkDestroyInstance(_handle, nullptr);
+    }
     // volk finalize is not necessary
 }
 
@@ -474,11 +509,10 @@ bool check_device_portability_support(VkPhysicalDevice device) {
 
 } // namespace
 
-std::optional<GraphRunner::Rhi::PhysicalDevice>
-InstanceImpl::create_single_physical_device_with_best_vram( ) const {
+std::optional<GraphRunner::Rhi::VPhysicalDevice>
+VInstance::create_single_physical_device_with_best_vram( ) const {
     // factory function, create empty object
-    GraphRunner::Rhi::PhysicalDevice result;
-    result._impl = new PhysicalDeviceImpl( );
+    GraphRunner::Rhi::VPhysicalDevice result;
 
     // fill the object
     // pick discrete gpu, with largest vram
@@ -518,8 +552,8 @@ InstanceImpl::create_single_physical_device_with_best_vram( ) const {
         ) {
             // init
             // highest score at index 0
-            result._impl->_handle = device_handle;
-            return result;
+            result._handle = device_handle;
+            return std::move(result);
         }
     }
 

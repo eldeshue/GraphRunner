@@ -1,16 +1,16 @@
-﻿#include <GraphRunner/Rhi/Rhi.h>
-#include <gmock/gmock.h>
+﻿#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "../src/Rhi/VRhi.h"
+
 TEST(RhiInstance, InstanceCreation) {
-    EXPECT_NO_THROW({
-        GraphRunner::Rhi::Instance("Rhi Test build", "GraphRunner", { }, { });
-    });
+    GraphRunner::Rhi::VInstance("Rhi Test build", "GraphRunner", { }, { });
+    SUCCEED( );
 }
 
 TEST(RhiObjects, ObjectCreation) {
     auto i =
-        GraphRunner::Rhi::Instance("Rhi Test build", "GraphRunner", { }, { });
+        GraphRunner::Rhi::VInstance("Rhi Test build", "GraphRunner", { }, { });
     auto pdv = i.create_single_physical_device_with_best_vram( );
     ASSERT_TRUE(pdv.has_value( ));
     auto dv = pdv.value( ).create_logical_device_with_single_graphic_queue({ });

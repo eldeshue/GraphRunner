@@ -1,6 +1,5 @@
 ﻿
-#ifndef GRAPHICS_API_CORE_H
-#define GRAPHICS_API_CORE_H
+#pragma once
 
 // platform configuration
 // for windows
@@ -30,7 +29,7 @@
 
 // vulkan profile
 #define VP_USE_OBJECT
-#include <VulkanProfiles/vulkan_profiles.hpp>
+#include "../../lib/VulkanProfiles/vulkan_profiles.hpp"
 
 // VMA
 // vulkan memory allocator
@@ -41,5 +40,3 @@
 // glfw3
 // presenting rendering result
 // #include <GLFW/glfw3.h>
-
-#endif

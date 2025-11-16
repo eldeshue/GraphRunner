@@ -1,7 +1,5 @@
 ﻿
-#include "./PhysicalDeviceImpl.h"
-
-#include <GraphRunner/Rhi/Device.h>
+#include "./VPhysicalDevice.h"
 
 #include <algorithm>
 #include <iterator>
@@ -11,22 +9,33 @@
 #include <utility>
 #include <vector>
 
-#include "./DeviceImpl.h"
 #include "./RhiConfig.h"
+#include "./VDevice.h"
 #include "Logger.h"
 #include "Util.h"
 
 // NOLINTBEGIN
-#include "GraphicsApiCore.h"
+#include "./GraphicsApiCore.h"
 // NOLINTEND
 
 using namespace GraphRunner::Rhi;
-using namespace GraphRunner::Rhi::Impl;
 using namespace GraphRunner::Util;
 
-PhysicalDeviceImpl::PhysicalDeviceImpl( ) : _handle { } {}
+VPhysicalDevice::VPhysicalDevice( ) : _handle { } {}
 
-PhysicalDeviceImpl::~PhysicalDeviceImpl( ) {}
+VPhysicalDevice::VPhysicalDevice(VPhysicalDevice&& other) noexcept :
+    _handle(other._handle) {
+    other._handle = VK_NULL_HANDLE;
+}
+
+VPhysicalDevice& VPhysicalDevice::operator=(VPhysicalDevice&& other) noexcept {
+    if ( this != &other ) {
+        std::swap(_handle, other._handle);
+    }
+    return *this;
+}
+
+VPhysicalDevice::~VPhysicalDevice( ) {}
 
 namespace {
 
@@ -217,7 +226,7 @@ void log_device_queue_families(VkPhysicalDevice device) {
 }
 } // namespace
 
-void PhysicalDeviceImpl::log_info( ) const {
+void VPhysicalDevice::log_info( ) const {
     log_device_properties(_handle);
     log_device_features(_handle);
     log_device_memories(_handle);
@@ -418,12 +427,11 @@ bool check_device_ext_support(
 
     raytracing같은 feature와 연계된 extension의 경우, 별도의 함수를 추후 구현 예정.
 */
-std::optional<Device>
-PhysicalDeviceImpl::create_logical_device_with_single_graphic_queue(
+std::optional<VDevice>
+VPhysicalDevice::create_logical_device_with_single_graphic_queue(
     std::vector<std::string_view> const& ext_names
 ) const {
-    Device result;
-    result._impl = new DeviceImpl;
+    VDevice result;
 
     // using profile library
     VpCapabilities vp_cap { };
@@ -483,24 +491,19 @@ PhysicalDeviceImpl::create_logical_device_with_single_graphic_queue(
     vp_dev_ci.pCreateInfo = &device_ci;
     vp_dev_ci.enabledFullProfileCount = 1;
     vp_dev_ci.pEnabledFullProfiles = &profile;
-    check(vpCreateDevice(
-        vp_cap,
-        _handle,
-        &vp_dev_ci,
-        nullptr,
-        &result._impl->_handle
-    ));
+    check(vpCreateDevice(vp_cap, _handle, &vp_dev_ci, nullptr, &result._handle)
+    );
     // init queue infos
     // save queue family information
     for ( int i = 0; i < queue_cis.size( ); ++i ) {
-        result._impl->_queue_infos.push_back(
+        result._queue_infos.push_back(
             std::make_tuple(selected_queue_family[i], queue_cis[i], 0)
         );
     }
 
     // volk load device
     // single device application only
-    volkLoadDevice(result._impl->_handle);
+    volkLoadDevice(result._handle);
 
-    return result;
+    return std::move(result);
 }

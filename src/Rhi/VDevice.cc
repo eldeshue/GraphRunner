@@ -1,23 +1,32 @@
 ﻿
-#include "./DeviceImpl.h"
 
-#include <GraphRunner/Rhi/Queue.h>
+#include "./VDevice.h"
 
 #include <tuple>
 
-#include "./QueueImpl.h"
+#include "./VQueue.h"
 
 // NOLINTBEGIN
-#include "GraphicsApiCore.h"
+#include "./GraphicsApiCore.h"
 // NOLINTEND
 
-using namespace GraphRunner::Rhi::Impl;
 using namespace GraphRunner::Rhi;
 
 // Physical device is the factory
-DeviceImpl::DeviceImpl( ) : _handle { } {}
+VDevice::VDevice( ) : _handle { } {}
 
-DeviceImpl::~DeviceImpl( ) {
+VDevice::VDevice(VDevice&& other) noexcept : _handle(other._handle) {
+    other._handle = VK_NULL_HANDLE;
+}
+
+VDevice& VDevice::operator=(VDevice&& other) noexcept {
+    if ( this != &other ) {
+        std::swap(_handle, other._handle);
+    }
+    return *this;
+}
+
+VDevice::~VDevice( ) {
     vkDestroyDevice(_handle, nullptr);
 }
 
@@ -53,9 +62,8 @@ int32_t find_queue_family_info_index(
 }
 } // namespace
 
-std::optional<Queue> DeviceImpl::create_queue_with_flags(VkQueueFlags flags) {
-    Queue result;
-    result._impl = new QueueImpl( );
+std::optional<VQueue> VDevice::create_queue_with_flags(VkQueueFlags flags) {
+    VQueue result;
 
     // find graphic queue family
     int32_t i = find_queue_family_info_index(_queue_infos, flags);
@@ -63,7 +71,7 @@ std::optional<Queue> DeviceImpl::create_queue_with_flags(VkQueueFlags flags) {
         return std::nullopt;
     }
     auto& [queue_family_prop, queue_ci, used_cnt] = _queue_infos[i];
-    result._impl->_info = &queue_family_prop;
+    result._info = &queue_family_prop;
 
     // init queue
     VkDeviceQueueInfo2 ci = { };
@@ -72,21 +80,21 @@ std::optional<Queue> DeviceImpl::create_queue_with_flags(VkQueueFlags flags) {
     ci.flags = 0;
     ci.queueFamilyIndex = queue_ci.queueFamilyIndex;
     ci.queueIndex = used_cnt;
-    vkGetDeviceQueue2(_handle, &ci, &result._impl->_handle);
+    vkGetDeviceQueue2(_handle, &ci, &result._handle);
 
     // increase counter
     used_cnt++;
-    return result;
+    return std::move(result);
 }
 
-std::optional<Queue> DeviceImpl::create_graphics_queue( ) {
+std::optional<VQueue> VDevice::create_graphics_queue( ) {
     return create_queue_with_flags(VK_QUEUE_GRAPHICS_BIT);
 }
 
-std::optional<Queue> DeviceImpl::create_compute_queue( ) {
+std::optional<VQueue> VDevice::create_compute_queue( ) {
     return create_queue_with_flags(VK_QUEUE_COMPUTE_BIT);
 }
 
-std::optional<Queue> DeviceImpl::create_transfer_queue( ) {
+std::optional<VQueue> VDevice::create_transfer_queue( ) {
     return create_queue_with_flags(VK_QUEUE_TRANSFER_BIT);
 }
