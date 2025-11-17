@@ -15,13 +15,15 @@ using namespace GraphRunner::Rhi;
 // Physical device is the factory
 VDevice::VDevice( ) : _handle { } {}
 
-VDevice::VDevice(VDevice&& other) noexcept : _handle(other._handle) {
+VDevice::VDevice(VDevice&& other) noexcept :
+    _handle(other._handle), _queue_infos(std::move(other._queue_infos)) {
     other._handle = VK_NULL_HANDLE;
 }
 
 VDevice& VDevice::operator=(VDevice&& other) noexcept {
     if ( this != &other ) {
         std::swap(_handle, other._handle);
+        std::swap(_queue_infos, other._queue_infos);
     }
     return *this;
 }

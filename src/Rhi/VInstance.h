@@ -16,6 +16,7 @@ namespace Rhi {
     class VInstance {
       private:
         // no default, no copy, no move
+        VInstance( ) = delete;
         VInstance(VInstance const&) = delete;
         VInstance& operator=(VInstance const&) = delete;
 
@@ -25,13 +26,10 @@ namespace Rhi {
         // instance or DXGIFactory
         VkInstance _handle;
 
-#ifdef ENABLE_VULKAN_VALIDATION
         VkDebugUtilsMessengerEXT _dbg_messenger;
-#endif
 
       public:
         // default, profile 2024 roadmap
-        VInstance( );
         VInstance(
             std::string_view app_name,
             std::string_view engine_name,

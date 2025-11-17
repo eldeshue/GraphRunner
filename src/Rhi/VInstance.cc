@@ -279,27 +279,13 @@ static void set_debug_messenger_ci(VkDebugUtilsMessengerCreateInfoEXT& ci) {
 #endif
 } // namespace
 
-VInstance::VInstance( ) :
-    _handle { }
-#ifdef ENABLE_VULKAN_VALIDATION
-    ,
-    _dbg_messenger { }
-#endif
-{
-}
-
 VInstance::VInstance(
     std::string_view app_name,
     std::string_view engine_name,
     std::vector<std::string_view> const& required_ext_names,
     std::vector<std::string_view> const& required_laye_names
 ) :
-    _handle { }
-#ifdef ENABLE_VULKAN_VALIDATION
-    ,
-    _dbg_messenger { }
-#endif
-{
+    _handle { }, _dbg_messenger { } {
     // volk init, init volk loader
     if ( volk_init_result != VK_SUCCESS ) {
         throw_with_message(
@@ -378,14 +364,10 @@ VInstance::VInstance(
 }
 
 VInstance::VInstance(VInstance&& other) noexcept :
-    _handle(other._handle)
-#ifdef ENABLE_VULKAN_VALIDATION
-    ,
-    _dbg_messenger(other._dbg_messenger)
-#endif
-{
+    _handle(other._handle), _dbg_messenger(VK_NULL_HANDLE) {
     other._handle = VK_NULL_HANDLE;
 #ifdef ENABLE_VULKAN_VALIDATION
+    _dbg_messenger = other._dbg_messenger;
     other._dbg_messenger = VK_NULL_HANDLE;
 #endif
 }
