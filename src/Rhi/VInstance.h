@@ -40,6 +40,8 @@ namespace Rhi {
         VInstance& operator=(VInstance&& other) noexcept;
         ~VInstance( );
 
+        VkInstance handle( ) const;
+
         // factory functions
         std::optional<GraphRunner::Rhi::VPhysicalDevice>
         create_single_physical_device_with_best_vram( ) const;

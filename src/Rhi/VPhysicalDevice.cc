@@ -37,6 +37,10 @@ VPhysicalDevice& VPhysicalDevice::operator=(VPhysicalDevice&& other) noexcept {
 
 VPhysicalDevice::~VPhysicalDevice( ) {}
 
+VkPhysicalDevice VPhysicalDevice::handle( ) const {
+    return _handle;
+}
+
 namespace {
 
 [[nodiscard]]

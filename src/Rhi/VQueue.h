@@ -28,6 +28,8 @@ namespace Rhi {
         VQueue& operator=(VQueue&& other) noexcept;
         ~VQueue( );
 
+        VkQueue handle( ) const;
+
         // submit command queue
     };
 } // namespace Rhi

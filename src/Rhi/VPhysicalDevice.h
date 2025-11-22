@@ -32,6 +32,8 @@ namespace Rhi {
         VPhysicalDevice& operator=(VPhysicalDevice&& other) noexcept;
         ~VPhysicalDevice( );
 
+        VkPhysicalDevice handle( ) const;
+
         // get property
         void log_info( ) const;
 

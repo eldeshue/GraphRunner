@@ -38,6 +38,8 @@ namespace Rhi {
         VDevice& operator=(VDevice&& other) noexcept;
         ~VDevice( );
 
+        VkDevice handle( ) const;
+
         // create queue
         std::optional<VQueue> create_queue_with_flags(VkQueueFlags flags);
         std::optional<VQueue> create_graphics_queue( );

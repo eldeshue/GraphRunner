@@ -394,6 +394,10 @@ VInstance::~VInstance( ) {
     // volk finalize is not necessary
 }
 
+VkInstance VInstance::handle( ) const {
+    return _handle;
+}
+
 namespace {
 
 std::uint64_t scoring_gpu_type(VkPhysicalDeviceType type) {

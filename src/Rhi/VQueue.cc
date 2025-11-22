@@ -22,3 +22,7 @@ VQueue& VQueue::operator=(VQueue&& other) noexcept {
 VQueue::~VQueue( ) {
     // queue belongs to the Device, no need to erase
 }
+
+VkQueue VQueue::handle( ) const {
+    return _handle;
+}

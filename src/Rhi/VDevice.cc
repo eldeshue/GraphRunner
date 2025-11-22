@@ -32,6 +32,10 @@ VDevice::~VDevice( ) {
     vkDestroyDevice(_handle, nullptr);
 }
 
+VkDevice VDevice::handle( ) const {
+    return _handle;
+}
+
 namespace {
 using QueuInfo =
     std::tuple<VkQueueFamilyProperties, VkDeviceQueueCreateInfo, uint32_t>;
