@@ -79,6 +79,11 @@ std::optional<VQueue> VDevice::create_queue_with_flags(VkQueueFlags flags) {
     auto& [queue_family_prop, queue_ci, used_cnt] = _queue_infos[i];
     result._info = &queue_family_prop;
 
+    // no queue left to use
+    if ( used_cnt == queue_ci.queueCount ) {
+        return std::nullopt;
+    }
+
     // init queue
     VkDeviceQueueInfo2 ci = { };
     ci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_INFO_2;
