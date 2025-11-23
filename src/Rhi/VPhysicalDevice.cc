@@ -419,6 +419,17 @@ bool check_device_ext_support(
     }
     return true;
 }
+
+bool is_ray_tracing_enabled(
+    std::vector<char const*> const& non_profile_ext_names
+) {
+    for ( auto const& name : non_profile_ext_names ) {
+        if ( std::string_view(name) == "VK_KHR_acceleration_structure" ) {
+            return true;
+        }
+    }
+    return false;
+}
 } // namespace
 
 /*
@@ -475,6 +486,21 @@ VPhysicalDevice::create_logical_device_with_single_graphic_queue(
         return std::nullopt;
     }
 
+    /* -------------- enabling features --------------------*/
+    // Ray Tracing features (extension also needed)
+    // device extension, VK_KHR_acceleration_structure required.
+    VkPhysicalDeviceAccelerationStructureFeaturesKHR as_features {
+        .sType =
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR,
+        .accelerationStructure = VK_TRUE,
+        .descriptorBindingAccelerationStructureUpdateAfterBind = VK_TRUE,
+    };
+    VkPhysicalDeviceRayTracingPipelineFeaturesKHR rt_pipeline_features {
+        .sType =
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR,
+        .rayTracingPipeline = VK_TRUE,
+    };
+
     // create logical device
     VkDeviceCreateInfo device_ci = { };
     device_ci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -489,6 +515,13 @@ VPhysicalDevice::create_logical_device_with_single_graphic_queue(
 
     device_ci.pEnabledFeatures = nullptr; // use device feature2 instead
     device_ci.pNext = nullptr; // if there are additinal features, add here
+
+    // for ray tracing only
+    if ( is_ray_tracing_enabled(non_profile_ext_names) ) {
+        device_ci.pNext = &as_features;
+        as_features.pNext = &rt_pipeline_features;
+        rt_pipeline_features.pNext = nullptr;
+    }
 
     // init handle
     VpDeviceCreateInfo vp_dev_ci { };
