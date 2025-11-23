@@ -15,8 +15,7 @@ namespace Rhi {
     // vulkan implementation
     class VInstance {
       private:
-        // no default, no copy, no move
-        VInstance( ) = delete;
+        // no copy
         VInstance(VInstance const&) = delete;
         VInstance& operator=(VInstance const&) = delete;
 
@@ -29,7 +28,9 @@ namespace Rhi {
         VkDebugUtilsMessengerEXT _dbg_messenger;
 
       public:
-        // default, profile 2024 roadmap
+        // default construct, empty
+        VInstance( );
+        // default profile is roadmap2024
         VInstance(
             std::string_view app_name,
             std::string_view engine_name,

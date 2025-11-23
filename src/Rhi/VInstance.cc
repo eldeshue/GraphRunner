@@ -279,6 +279,11 @@ static void set_debug_messenger_ci(VkDebugUtilsMessengerCreateInfoEXT& ci) {
 #endif
 } // namespace
 
+VInstance::VInstance( ) :
+    _handle(VK_NULL_HANDLE), _dbg_messenger(VK_NULL_HANDLE) {
+    // empty, do not use
+}
+
 VInstance::VInstance(
     std::string_view app_name,
     std::string_view engine_name,
