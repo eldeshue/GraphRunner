@@ -31,9 +31,8 @@ namespace Rhi {
             tuple<VkQueueFamilyProperties, VkDeviceQueueCreateInfo, uint32_t>;
         std::vector<QueuInfo> _queue_infos;
 
-        VDevice( );
-
       public:
+        VDevice( );
         VDevice(VDevice&& other) noexcept;
         VDevice& operator=(VDevice&& other) noexcept;
         ~VDevice( );

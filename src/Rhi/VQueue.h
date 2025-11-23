@@ -20,10 +20,9 @@ namespace Rhi {
         VkQueue _handle;
         VkQueueFamilyProperties* _info;
 
+      public:
         // Device is the factory
         VQueue( );
-
-      public:
         VQueue(VQueue&& other) noexcept;
         VQueue& operator=(VQueue&& other) noexcept;
         ~VQueue( );

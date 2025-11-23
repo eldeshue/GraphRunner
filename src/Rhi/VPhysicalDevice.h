@@ -25,9 +25,8 @@ namespace Rhi {
         // handle
         VkPhysicalDevice _handle;
 
-        VPhysicalDevice( );
-
       public:
+        VPhysicalDevice( );
         VPhysicalDevice(VPhysicalDevice&& other) noexcept;
         VPhysicalDevice& operator=(VPhysicalDevice&& other) noexcept;
         ~VPhysicalDevice( );
