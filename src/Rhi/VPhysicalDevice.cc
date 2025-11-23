@@ -440,7 +440,14 @@ bool is_ray_tracing_enabled(
     따라서, device 관련 feature를 제어하려면 baseline profile을 교체하세요.
     profile 교체는 RhiConfig.h에서 가능합니다.
 
-    raytracing같은 feature와 연계된 extension의 경우, 별도의 함수를 추후 구현 예정.
+    현재 프로젝트에 구현될 hybrid-bindless 구현에 필요한 
+    feature들은 모두 profile로 활성화 되었습니다.
+    - dynamic rendering
+    - buffer device address
+    - descriptor indexing
+    - synchronization2
+
+    accelleration structure 확장이 추가되면 ray-tracing도 활성화됩니다.
 */
 std::optional<VDevice>
 VPhysicalDevice::create_logical_device_with_single_graphic_queue(
