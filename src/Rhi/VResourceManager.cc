@@ -49,7 +49,8 @@ VResourceManager::VResourceManager(
 ) :
     _rhi_frame_index(frame_idx),
     _rhi_device(dvc),
-    _allocator(create_vma_with_volk(inst, pdvc, dvc)) {
+    _allocator(create_vma_with_volk(inst, pdvc, dvc)),
+    _semaphores(nullptr) {
     // init
 }
 
@@ -58,6 +59,11 @@ VResourceManager::~VResourceManager( ) {
     if ( _allocator != VK_NULL_HANDLE ) {
         vmaDestroyAllocator(_allocator);
     }
+}
+
+void VResourceManager::set_semaphores(std::vector<VkSemaphore>* semaphores) {
+    // set before rendering start
+    _semaphores = semaphores;
 }
 
 namespace {
