@@ -33,9 +33,7 @@
 
 // VMA
 // vulkan memory allocator
-// #define VMA_STATIC_VULKAN_FUNCTIONS 0
-// #define VMA_DYNAMIC_VULKAN_FUNCTIONS 1
-// #include "vk_mem_alloc.h"
+#include <vma/vk_mem_alloc.h>
 
 // glfw3
 // presenting rendering result
