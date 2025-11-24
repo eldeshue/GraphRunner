@@ -39,6 +39,9 @@ namespace Rhi {
         std::optional<VDevice> create_logical_device_with_single_graphic_queue(
             std::vector<std::string_view> const& ext_names
         ) const;
+        VDevice create_logical_device_with_all_queues(
+            std::vector<std::string_view> const& ext_names
+        ) const;
     };
 } // namespace Rhi
 } // namespace GraphRunner

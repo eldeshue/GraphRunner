@@ -2,6 +2,7 @@
 #include "./VPhysicalDevice.h"
 
 #include <algorithm>
+#include <exception>
 #include <iterator>
 #include <set>
 #include <string_view>
@@ -280,14 +281,19 @@ uint32_t find_queue_family_index(
 
 // device queue create info
 /*
+    일치하는 flags를 갖는 큐 패밀리로부터 queue_cnt만큼의 큐를 찾는 구현
+    사실 큐는 logical device의 생성과 함께 생성되고, 이후에 핸들만 받는 구현
+    따라서 생성할 큐의 큐패밀리를 미리 찾는 구현이라 할 수 있다.
+
     문제 1 : 해당 함수를 호출할 때 마다, queue family를 쿼리해오는데, 굉장히 비효율적임.
     문제 2 : queue_cnt 만큼 큐를 가진 queue family가 존재하지 않을 수 있음, 현재는 모자란대로 그대로 감.
 
-    이러한 이유로  add_queue_ci를 재활용하기 위해서는 리팩토링 필요함.
+    이러한 이유로  add_queue_ci는 재활용하지 않음.
 */
 void add_queue_ci_with_family(
     VkPhysicalDevice pdvc,
     VkQueueFlags flags,
+    float* queue_priority,
     uint32_t queue_cnt,
     std::vector<VkDeviceQueueCreateInfo>& queue_cis,
     std::vector<VkQueueFamilyProperties>& selected_queue_family
@@ -310,10 +316,9 @@ void add_queue_ci_with_family(
     }
 
     VkDeviceQueueCreateInfo que_ci = { };
-    float const pq = 1.0f;
     que_ci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     que_ci.pNext = nullptr;
-    que_ci.pQueuePriorities = &pq;
+    que_ci.pQueuePriorities = queue_priority;
     que_ci.queueFamilyIndex = find_queue_family_index(que_family_props, flags);
     que_ci.queueCount = std::min(
         queue_cnt, // try to get
@@ -326,6 +331,60 @@ void add_queue_ci_with_family(
     selected_queue_family.push_back(
         que_family_props[que_ci.queueFamilyIndex].queueFamilyProperties
     );
+}
+
+/**
+ * @brief 선택한 physical device에서 모든 큐 패밀리를 가져온다.
+ * @detail
+ * 이전의 구현이 특정 큐 패밀리에서 특정 갯수만큼 큐를 가져오는 구현이었는데, 
+ * 현실적으로 의미가 없었음.
+ * @param[in] pdvc gpu를 가리키는 vulkan 핸들
+ * @param[in] queue_priorities 각 큐의 생성시 부여할 우선순위의 배열
+ * @param[out] queue_cis 생성할 큐의 info
+ * @param[out] selected_queue_family 생성할 큐가 소속된 family의 info
+ * @warning 단 하나의 logical device 생성에만 사용해야 한다.
+ */
+void add_all_queue_ci_with_family(
+    VkPhysicalDevice pdvc,
+    std::vector<float>& queue_priorities,
+    std::vector<VkDeviceQueueCreateInfo>& queue_cis,
+    std::vector<VkQueueFamilyProperties>& selected_queue_family
+) {
+    // query queue family properties
+    // querying properties per every call can cause waste...
+    std::vector<VkQueueFamilyProperties2> que_family_props;
+    {
+        uint32_t cnt = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties2(pdvc, &cnt, nullptr);
+        que_family_props.resize(
+            cnt,
+            {VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2}
+        );
+        vkGetPhysicalDeviceQueueFamilyProperties2(
+            pdvc,
+            &cnt,
+            que_family_props.data( )
+        );
+    }
+
+    // take all from physical device
+    for ( int i = 0; i < que_family_props.size( ); ++i ) {
+        auto const& cur_family_prop = que_family_props[i];
+
+        VkDeviceQueueCreateInfo que_ci = { };
+        que_ci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        que_ci.pNext = nullptr;
+        que_ci.queueFamilyIndex = i;
+        que_ci.queueCount = cur_family_prop.queueFamilyProperties.queueCount;
+        if ( que_ci.queueCount > queue_priorities.size( ) ) {
+            queue_priorities.resize(que_ci.queueCount, 1.0f);
+        }
+        que_ci.pQueuePriorities = queue_priorities.data( );
+
+        // push back
+        queue_cis.push_back(que_ci);
+        selected_queue_family.push_back(cur_family_prop.queueFamilyProperties);
+    }
 }
 
 // device extensions
@@ -432,23 +491,29 @@ bool is_ray_tracing_enabled(
 }
 } // namespace
 
-/*
-    단일 graphic queue를 생성하는 device에 대한 factory함수
-    baseline profile(작성 기준으론 roadmap_2024)을 기준으로 ext만 추가 가능
-
-    device feature 관련 제어는 전적으로 roadmap_2024에 의존합니다.
-    따라서, device 관련 feature를 제어하려면 baseline profile을 교체하세요.
-    profile 교체는 RhiConfig.h에서 가능합니다.
-
-    현재 프로젝트에 구현될 hybrid-bindless 구현에 필요한 
-    feature들은 모두 profile로 활성화 되었습니다.
-    - dynamic rendering
-    - buffer device address
-    - descriptor indexing
-    - synchronization2
-
-    accelleration structure 확장이 추가되면 ray-tracing도 활성화됩니다.
+/**
+ * @brief 단일 graphic queue를 생성하는 device에 대한 factory함수
+ * @param[in] ext_names 프로필에서 정의하는 부분 외로 추가 활성화 할 ext 이름
+ * @return VDevice, VkDevice의 wrapper
+ * @detail
+ *   baseline profile(작성 기준으론 roadmap_2024)을 기준으로 ext만 추가 가능.
+ *   device feature 관련 제어는 전적으로 roadmap_2024에 의존합니다.
+ *   따라서, device 관련 feature를 제어하려면 baseline profile을 교체하세요.
+ *   profile 교체는 RhiConfig.h에서 가능합니다.
+ *
+ *   현재 프로젝트에 구현될 hybrid-bindless 구현에 필요한 
+ *   feature들은 모두 profile로 활성화 되었습니다.
+ *   - dynamic rendering
+ *   - buffer device address
+ *   - descriptor indexing
+ *   - synchronization2
+ *
+ *   accelleration structure 확장이 추가되면 ray-tracing도 활성화됩니다.
+ * 
+ * @warning 
+ * volk load device를 호출하기에 여러번 호출하면 안됩니다. 
 */
+[[deprecated("Use create_logical_device_with_all_queues instead")]]
 std::optional<VDevice>
 VPhysicalDevice::create_logical_device_with_single_graphic_queue(
     std::vector<std::string_view> const& ext_names
@@ -465,11 +530,13 @@ VPhysicalDevice::create_logical_device_with_single_graphic_queue(
 
     // select queue family to use
     // select single graphic queue
+    float qp = 0.9f;
     std::vector<VkDeviceQueueCreateInfo> queue_cis;
     std::vector<VkQueueFamilyProperties> selected_queue_family;
     add_queue_ci_with_family(
         _handle,
         VK_QUEUE_GRAPHICS_BIT,
+        &qp,
         1,
         queue_cis,
         selected_queue_family
@@ -550,4 +617,134 @@ VPhysicalDevice::create_logical_device_with_single_graphic_queue(
     volkLoadDevice(result._handle);
 
     return std::move(result);
+}
+
+/**
+ * @brief 선택한 gpu의 모든 queue를 생성하는 device에 대한 factory함수
+ * @param[in] ext_names 프로필에서 정의하는 부분 외로 추가 활성화 할 ext 이름
+ * @return VDevice, VkDevice의 wrapper
+ * @detail
+ *   baseline profile(작성 기준으론 roadmap_2024)을 기준으로 ext만 추가 가능.
+ *   device feature 관련 제어는 전적으로 roadmap_2024에 의존합니다.
+ *   따라서, device 관련 feature를 제어하려면 baseline profile을 교체하세요.
+ *   profile 교체는 RhiConfig.h에서 가능합니다.
+ *
+ *   현재 프로젝트에 구현될 hybrid-bindless 구현에 필요한 
+ *   feature들은 모두 profile로 활성화 되었습니다.
+ *   - dynamic rendering
+ *   - buffer device address
+ *   - descriptor indexing
+ *   - synchronization2
+ *
+ *   accelleration structure 확장이 추가되면 ray-tracing도 활성화됩니다.
+ * 
+ * @warning 
+ * volk load device를 호출하기에 여러번 호출하면 안됩니다. 
+*/
+VDevice VPhysicalDevice::create_logical_device_with_all_queues(
+    std::vector<std::string_view> const& ext_names
+) const {
+    VDevice result;
+
+    // using profile library
+    VpCapabilities vp_cap { };
+    set_vp_capabilities(vp_cap);
+    VpProfileProperties profile {
+        RHI_VULKAN_PROFILE_NAME,
+        RHI_VULKAN_PROFILE_SPEC_VERSION
+    };
+
+    // select queue family to use
+    // get all queues from the physical device
+    std::vector<float> pqs; // priorities for queues in the queue family
+    std::vector<VkDeviceQueueCreateInfo> queue_cis;
+    std::vector<VkQueueFamilyProperties> selected_queue_family;
+    add_all_queue_ci_with_family(
+        _handle,
+        pqs,
+        queue_cis,
+        selected_queue_family
+    );
+
+    // device extension check
+    // profile library?
+    std::vector<char const*> non_profile_ext_names;
+    if ( !set_non_profile_device_extensions(
+             vp_cap,
+             profile,
+             ext_names,
+             non_profile_ext_names
+         ) ) {
+        // throw
+        throw std::runtime_error(
+            "Device Creation Error : fail to query current profile's properties"
+        );
+    }
+
+    // extension support check
+    // profile support is already checked
+    if ( !check_device_ext_support(_handle, non_profile_ext_names) ) {
+        // throw
+        throw std::runtime_error(
+            "Device Creation Error : required extension is not supported"
+        );
+    }
+
+    /* -------------- enabling features --------------------*/
+    // Ray Tracing features (extension also needed)
+    // device extension, VK_KHR_acceleration_structure required.
+    VkPhysicalDeviceAccelerationStructureFeaturesKHR as_features {
+        .sType =
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR,
+        .accelerationStructure = VK_TRUE,
+        .descriptorBindingAccelerationStructureUpdateAfterBind = VK_TRUE,
+    };
+    VkPhysicalDeviceRayTracingPipelineFeaturesKHR rt_pipeline_features {
+        .sType =
+            VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR,
+        .rayTracingPipeline = VK_TRUE,
+    };
+
+    // create logical device
+    VkDeviceCreateInfo device_ci = { };
+    device_ci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    device_ci.enabledLayerCount = 0; // deprecated
+    device_ci.ppEnabledLayerNames = nullptr; // deprecated
+
+    device_ci.queueCreateInfoCount = queue_cis.size( );
+    device_ci.pQueueCreateInfos = queue_cis.data( );
+
+    device_ci.enabledExtensionCount = non_profile_ext_names.size( );
+    device_ci.ppEnabledExtensionNames = non_profile_ext_names.data( );
+
+    device_ci.pEnabledFeatures = nullptr; // use device feature2 instead
+    device_ci.pNext = nullptr; // if there are additinal features, add here
+
+    // for ray tracing only
+    if ( is_ray_tracing_enabled(non_profile_ext_names) ) {
+        device_ci.pNext = &as_features;
+        as_features.pNext = &rt_pipeline_features;
+        rt_pipeline_features.pNext = nullptr;
+    }
+
+    // init handle
+    VpDeviceCreateInfo vp_dev_ci { };
+    vp_dev_ci.pCreateInfo = &device_ci;
+    vp_dev_ci.enabledFullProfileCount = 1;
+    vp_dev_ci.pEnabledFullProfiles = &profile;
+    check(vpCreateDevice(vp_cap, _handle, &vp_dev_ci, nullptr, &result._handle)
+    );
+    // init queue infos
+    // save queue family information
+    for ( int i = 0; i < queue_cis.size( ); ++i ) {
+        result._queue_infos.push_back(
+            std::make_tuple(selected_queue_family[i], queue_cis[i], 0)
+        );
+    }
+
+    // volk load device
+    // single device application only
+    volkLoadDevice(result._handle);
+
+    return result;
 }
