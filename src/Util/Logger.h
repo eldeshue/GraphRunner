@@ -12,6 +12,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <syncstream>
 
 namespace GraphRunner {
 namespace Util {
@@ -70,15 +71,17 @@ namespace Util {
         static void print_log(string const& message) {
             auto& logger = get_instance( );
 
-            cout << message << endl;
+            std::osyncstream(cout) << message << endl;
 
             if ( logger.log_file.is_open( ) ) {
-                logger.log_file << message << endl;
+                // for sync, use osyncstream
+                std::osyncstream(logger.log_file) << message << endl;
                 logger.log_file.flush( ); // Ensure immediate write
                 logger.messages_processed++;
             } else {
-                cerr << "WARNING: Log file is not open, message lost: "
-                     << message << endl;
+                std::osyncstream(cerr)
+                    << "WARNING: Log file is not open, message lost: "
+                    << message << endl;
             }
         }
     };
