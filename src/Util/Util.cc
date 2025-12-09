@@ -153,5 +153,24 @@ namespace Util {
 
         vpCreateCapabilities(&vp_cap_ci, nullptr, &cap);
     }
+
+    /**
+     * @brief calculate padded size of resource.
+     *
+     * vulkan api는 메모리 alignment에 매우 민감함. 
+     * buffer 및 image의 생성과 그 IO 모두 alignment에 맞춰서 동작함.
+     * 
+     * 다행히 생성 시점의 alignment는 VMA가 수행해줌.
+     * 다만, 자원의 offset을 이용한 부분 활용에서는 직접 alignment를 관리해줘야 함.
+     * 
+     * 예를 들면, buffer의 경우 limit의 minUniformBufferOffsetAlignment에 정렬필요.
+     * buffer의 flush나 invalidate는 nonCoherentAtomSize 단위로 수행됨. 
+     * ex) ssbo, staging, sub allocation, etc
+     */
+    constexpr VkDeviceSize
+    cal_paded_size(VkDeviceSize data_size, VkDeviceSize alignment) {
+        return (data_size + alignment - 1) & ~(alignment - 1);
+    }
+
 } // namespace Util
 } // namespace GraphRunner
