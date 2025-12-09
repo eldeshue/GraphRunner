@@ -82,6 +82,21 @@ namespace Rhi {
         );
         ~VResourceManager( );
 
+        /* ---------- Getter ---------- */
+        VkDevice device( ) const {
+            return _rhi_device;
+        }
+
+        VmaAllocator vma_allocator( ) const {
+            return _allocator;
+        }
+
+        DeletionQueue& get_current_deletion_queue( ) {
+            // use frame index
+            return _del_queues
+                [_rhi_frame_index.load( ) % RHI_MAX_FRAMES_IN_FLIGHT];
+        }
+
         /* ---------- before rendering ---------- */
         // frame_num == 0 : before rendering
 
