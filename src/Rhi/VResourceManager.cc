@@ -36,6 +36,25 @@ create_vma_with_volk(VkInstance inst, VkPhysicalDevice pdvc, VkDevice dvc) {
 
     return result;
 }
+
+void query_device_limits(
+    VkPhysicalDevice physical_device,
+    VkPhysicalDeviceDescriptorIndexingProperties& indexing_props,
+    VkPhysicalDeviceProperties2& props2
+) {
+    // Vulkan 1.2 core or VK_EXT_descriptor_indexing needed
+    // current base profile is vulkan 1.3+
+    indexing_props.sType =
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES;
+    indexing_props.pNext = nullptr;
+
+    // general properties
+    props2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+    props2.pNext = &indexing_props; // chaining
+
+    // query data
+    vkGetPhysicalDeviceProperties2(physical_device, &props2);
+}
 } // namespace
 
 // basic creation method
@@ -49,6 +68,7 @@ VResourceManager::VResourceManager(
 ) :
     _rhi_frame_index(frame_idx),
     _rhi_device(dvc),
+    _rhi_phys_device(pdvc),
     _allocator(create_vma_with_volk(inst, pdvc, dvc)),
     _render_semaphores(nullptr),
     _del_queues( ),
@@ -58,6 +78,11 @@ VResourceManager::VResourceManager(
         // Rvalue, must be moved
         queue = DeletionQueue(_rhi_device, _allocator);
     }
+    // query device limits
+    query_device_limits(_rhi_phys_device, _desc_index_props, _pdv_props);
+
+    // TBD : bindless desc pool
+    // use device limit
 }
 
 VResourceManager::~VResourceManager( ) {

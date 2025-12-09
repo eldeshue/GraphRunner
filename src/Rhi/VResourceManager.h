@@ -25,11 +25,17 @@ namespace Rhi {
 
         // api specific
         // gpu device
-        VkDevice _rhi_device;
+        VkDevice const _rhi_device;
+        VkPhysicalDevice const _rhi_phys_device;
+
+        // properties
+        // for resource managing
+        VkPhysicalDeviceDescriptorIndexingProperties _desc_index_props = { };
+        VkPhysicalDeviceProperties2 _pdv_props = { };
 
         // allocation manager
         // memory allocator, vma
-        VmaAllocator _allocator;
+        VmaAllocator const _allocator;
 
         // vector of timeline semaphores
         // each semaphore is shared by each rendering thread
@@ -58,6 +64,7 @@ namespace Rhi {
         // synchronization needed, no ownership transfer
         // reallocate if the staging memory is not enough
         // TBD : after deletion
+        // std::array<VStagingBuffer, RHI_MAXFRAMES_IN_FLIGHT> _staging_buffers;
 
         // streaming manager
         // virtual tiling,
