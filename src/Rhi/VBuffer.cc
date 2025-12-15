@@ -1,6 +1,7 @@
 ﻿
 #include "./VBuffer.h"
 
+#include "./VResourceManager.h"
 #include "Util.h"
 
 using namespace GraphRunner::Rhi;
@@ -27,12 +28,12 @@ VBuffer::VBuffer(
     VResourceManager& source, // factory
     VkDeviceSize size, // required size
     VkBufferUsageFlags buffer_usage_flags,
-    VmaMemoryUsage mem_usage = VMA_MEMORY_USAGE_AUTO, // auto preferred
-    VmaAllocationCreateFlags alloc_flags = 0,
-    VkMemoryPropertyFlags req_flags = 0,
-    VkMemoryPropertyFlags pref_flags = 0,
-    bool is_mapped = false,
-    std::string_view name = ""
+    VmaMemoryUsage mem_usage, // auto preferred
+    VmaAllocationCreateFlags alloc_flags,
+    VkMemoryPropertyFlags req_flags,
+    VkMemoryPropertyFlags pref_flags,
+    bool is_mapped,
+    std::string_view name
 ) :
     _factory(source),
     _buffer_usage_flags(buffer_usage_flags),
@@ -138,10 +139,7 @@ VBuffer& VBuffer::operator=(VBuffer&& other) {
     return *this;
 }
 
-void VBuffer::flush(
-    VkDeviceSize size = VK_WHOLE_SIZE,
-    VkDeviceSize offset = 0
-) {
+void VBuffer::flush(VkDeviceSize size, VkDeviceSize offset) {
     // if the buffer is not host coherent, fluse needed.
     // call after all memcpy called
     // but on PC, all host visible memory will be host coherent...
@@ -162,7 +160,7 @@ void VBuffer::flush(
 void VBuffer::write_back(
     void const* src,
     VkDeviceSize write_size,
-    VkDeviceSize dst_offset = 0
+    VkDeviceSize dst_offset
 ) {
     vmaCopyMemoryToAllocation(
         _factory.vma_allocator( ),
@@ -173,10 +171,7 @@ void VBuffer::write_back(
     );
 }
 
-void VBuffer::invalidate(
-    VkDeviceSize size = VK_WHOLE_SIZE,
-    VkDeviceSize offset = 0
-) {
+void VBuffer::invalidate(VkDeviceSize size, VkDeviceSize offset) {
     vmaInvalidateAllocation(_factory.vma_allocator( ), _alloc, offset, size);
 }
 
@@ -194,7 +189,7 @@ void VBuffer::invalidate(
 void VBuffer::read_back(
     void* dst,
     VkDeviceSize read_size,
-    VkDeviceSize src_offset = 0
+    VkDeviceSize src_offset
 ) {
     vmaCopyAllocationToMemory(
         _factory.vma_allocator( ),

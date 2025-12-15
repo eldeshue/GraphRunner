@@ -5,10 +5,11 @@
 
 #include "./GraphicsApiCore.h"
 #include "./VResource.h"
-#include "./VResourceManager.h"
 
 namespace GraphRunner {
 namespace Rhi {
+    class VResourceManager;
+
     class VBuffer: public VResource {
       private:
         // no default, no copy

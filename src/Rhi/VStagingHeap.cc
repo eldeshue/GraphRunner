@@ -1,6 +1,7 @@
 ﻿
 #include "./VStagingHeap.h"
 
+#include "./VResourceManager.h"
 #include "Util.h"
 
 using namespace GraphRunner::Rhi;
@@ -30,11 +31,13 @@ VStagingHeap::~VStagingHeap( ) {
     // no other resource to handle
 }
 
+// must not move during parallel situation
 VStagingHeap::VStagingHeap(VStagingHeap&& other) noexcept :
     _cur_offset(other._cur_offset.load( )),
     _non_coherent_alignment(other._non_coherent_alignment),
     _buffer(std::move(other._buffer)) {}
 
+// must not move during parallel situation
 VStagingHeap& VStagingHeap::operator=(VStagingHeap&& other) noexcept {
     if ( this != &other ) {
         _cur_offset.store(other._cur_offset.load( ));
@@ -44,6 +47,7 @@ VStagingHeap& VStagingHeap::operator=(VStagingHeap&& other) noexcept {
     return *this;
 }
 
+// save data for staging, thread safe
 // check size with offset, move offset, copy data to buffer
 // default alignment is nonCoherentAtomSize for cache coherent
 // if copy from buffer to image, alignment must be optimalBufferCopyOffsetAlignment

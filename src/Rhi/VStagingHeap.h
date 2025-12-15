@@ -6,10 +6,11 @@
 
 #include "./GraphicsApiCore.h"
 #include "./VBuffer.h"
-#include "./VResourceManager.h"
 
 namespace GraphRunner {
 namespace Rhi {
+    class VResourceManager;
+
     struct StagedData {
         VkBuffer buffer;
         VkDeviceSize offset;
