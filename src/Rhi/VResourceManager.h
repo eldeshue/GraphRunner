@@ -1,12 +1,14 @@
 ﻿#pragma once
 
-#include <array>
 #include <atomic>
+#include <optional>
 #include <thread>
+#include <vector>
 
 #include "./DeletionQueue.h"
 #include "./GraphicsApiCore.h"
 #include "./RhiConfig.h"
+#include "./VStagingHeap.h"
 
 namespace GraphRunner {
 namespace Rhi {
@@ -47,7 +49,7 @@ namespace Rhi {
         // per frame deletion queue
         // need mutex for each queue
         // thread for consuming data in deletion queue
-        std::array<DeletionQueue, RHI_MAX_FRAMES_IN_FLIGHT> _del_queues;
+        std::vector<DeletionQueue> _del_queues;
         std::jthread _del_thread;
 
         // desc manager
@@ -63,8 +65,7 @@ namespace Rhi {
         // record all copy command before rendering starts
         // synchronization needed, no ownership transfer
         // reallocate if the staging memory is not enough
-        // TBD : after deletion
-        // std::array<VStagingBuffer, RHI_MAXFRAMES_IN_FLIGHT> _staging_buffers;
+        std::vector<VStagingHeap> _staging_heaps;
 
         // streaming manager
         // virtual tiling,
@@ -95,6 +96,20 @@ namespace Rhi {
             // use frame index
             return _del_queues
                 [_rhi_frame_index.load( ) % RHI_MAX_FRAMES_IN_FLIGHT];
+        }
+
+        /**
+         * @brief stage data for simple uploading. 
+         * If the uploading data is too big, need transfer-only-queue or tile-based-streaming.
+         * those will be implemented later.
+         * 
+         * @return returns option of Staged Information, return none if the heap runs out.
+         */
+        std::optional<StagedData>
+        try_stage_data(void* src, VkDeviceSize size, VkDeviceSize alignment) {
+            return _staging_heaps
+                [_rhi_frame_index.load( ) % RHI_MAX_FRAMES_IN_FLIGHT]
+                    .try_push(src, size, alignment);
         }
 
         /* ---------- before rendering ---------- */

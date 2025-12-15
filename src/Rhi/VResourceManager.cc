@@ -55,6 +55,10 @@ void query_device_limits(
     // query data
     vkGetPhysicalDeviceProperties2(physical_device, &props2);
 }
+
+// default staging heap size, 64MB
+constexpr VkDeviceSize DEFAULT_STAGING_HEAP_SIZE =
+    static_cast<VkDeviceSize>(RHI_DEFAULT_STAGING_HEAP_SIZE_MB) * 1024 * 1024;
 } // namespace
 
 // basic creation method
@@ -73,13 +77,20 @@ VResourceManager::VResourceManager(
     _render_semaphores(nullptr),
     _del_queues( ),
     _del_thread( ) {
-    // _del_queus are default constructed, so init device and allocator
-    for ( auto& queue : _del_queues ) {
-        // Rvalue, must be moved
-        queue = DeletionQueue(_rhi_device, _allocator);
-    }
     // query device limits
     query_device_limits(_rhi_phys_device, _desc_index_props, _pdv_props);
+
+    // push per frame resources
+    for ( int i = 0; i < RHI_MAX_FRAMES_IN_FLIGHT; ++i ) {
+        // _del_queus
+        _del_queues.push_back(DeletionQueue(_rhi_device, _allocator));
+        // staging buffers
+        _staging_heaps.push_back(VStagingHeap(
+            *this,
+            _pdv_props.properties.limits.nonCoherentAtomSize,
+            DEFAULT_STAGING_HEAP_SIZE // 64MB
+        ));
+    }
 
     // TBD : bindless desc pool
     // use device limit
@@ -168,10 +179,9 @@ void VResourceManager::start_render(std::vector<VkSemaphore> const* semaphores
                     // do not handle, panic
                     // critical error, logging needed
                     print_log(
-                        "Error : vkWaitSemaphores failed in deletion thread. failed result is {}.",
-                        result
+                        "Error : vkWaitSemaphores failed in deletion thread.\n"
                     );
-                    break;
+                    check(result); // throw from here
                 }
             }
         } catch ( std::exception e ) {
@@ -208,8 +218,4 @@ void VResourceManager::end_render( ) {
 }
 
 /* ---------- resource factory ---------- */
-namespace {
-uint64_t calc_resource_size( ) {
-    // calculate size of resource with respect to alignment
-}
-} // namespace
+namespace {} // namespace
