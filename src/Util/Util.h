@@ -21,7 +21,7 @@ namespace Util {
     void set_vp_capabilities(VpCapabilities& cap);
 
     constexpr VkDeviceSize
-    cal_paded_size(VkDeviceSize data_size, VkDeviceSize alignment);
+    calculate_aligned_value(VkDeviceSize target_value, VkDeviceSize alignment);
 } // namespace Util
 } // namespace GraphRunner
 
