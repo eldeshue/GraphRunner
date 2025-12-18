@@ -7,6 +7,17 @@
 using namespace GraphRunner::Rhi;
 using namespace GraphRunner::Util;
 
+namespace {
+VkBufferCreateInfo get_stage_buffer_ci(VkDeviceSize size) {
+    VkBufferCreateInfo ci = { };
+    ci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    ci.flags = 0;
+    ci.size = size;
+    ci.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    return ci;
+}
+} // namespace
+
 VStagingHeap::VStagingHeap(
     VResourceManager& source,
     VkDeviceSize non_coherent_alignment,
@@ -16,8 +27,7 @@ VStagingHeap::VStagingHeap(
     _non_coherent_alignment(non_coherent_alignment),
     _buffer(
         source, // resource manager, vma allocator
-        size, // size of buffer
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT, // for staging buffer
+        get_stage_buffer_ci(size),
         VMA_MEMORY_USAGE_AUTO, // let vma choose memory type
         VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
             | VMA_ALLOCATION_CREATE_MAPPED_BIT, // for writeable, mapping

@@ -29,11 +29,11 @@ VImage::VImage(
     VResourceManager& source, // factory
     VkImageCreateInfo img_ci,
     VkImageAspectFlags aspect_flags,
-    VmaMemoryUsage mem_usage = VMA_MEMORY_USAGE_AUTO,
-    VmaAllocationCreateFlags alloc_flags = 0,
-    VkMemoryPropertyFlags req_flags = 0,
-    VkMemoryPropertyFlags pref_flags = 0,
-    std::string_view name = ""
+    VmaMemoryUsage mem_usage,
+    VmaAllocationCreateFlags alloc_flags,
+    VkMemoryPropertyFlags req_flags,
+    VkMemoryPropertyFlags pref_flags,
+    std::string_view name
 ) :
     _factory(&source),
     _cur_layout(img_ci.initialLayout),
