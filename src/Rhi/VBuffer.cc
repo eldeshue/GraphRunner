@@ -26,8 +26,7 @@ void set_buffer_debug_name(VkDevice device, VkBuffer handle, char const* name) {
 
 VBuffer::VBuffer(
     VResourceManager& source, // factory
-    VkDeviceSize size, // required size
-    VkBufferUsageFlags buffer_usage_flags,
+    VkBufferCreateInfo ci,
     VmaMemoryUsage mem_usage, // auto preferred
     VmaAllocationCreateFlags alloc_flags,
     VkMemoryPropertyFlags req_flags,
@@ -35,9 +34,7 @@ VBuffer::VBuffer(
     bool is_mapped,
     std::string_view name
 ) :
-    _factory(source),
-    _buffer_usage_flags(buffer_usage_flags),
-    _mem_usage(mem_usage) {
+    _factory(&source), _ci(ci), _mem_usage(mem_usage) {
     // initialize memory mapping
     // must set one of next two bit
     // VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT for write,staging buffer
@@ -45,12 +42,6 @@ VBuffer::VBuffer(
     if ( is_mapped == true ) {
         alloc_flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
     }
-
-    // create buffer using vma
-    VkBufferCreateInfo buffer_ci = { };
-    buffer_ci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    buffer_ci.size = size;
-    buffer_ci.usage = _buffer_usage_flags;
 
     VmaAllocationCreateInfo alloc_ci = { };
     alloc_ci.usage = _mem_usage; // set auto and let vma to decide
@@ -63,8 +54,8 @@ VBuffer::VBuffer(
     // until residency management implemented
     // need to query memory status before creation
     check(vmaCreateBuffer(
-        _factory.vma_allocator( ),
-        &buffer_ci,
+        _factory->vma_allocator( ),
+        &_ci,
         &alloc_ci,
         &_handle,
         &_alloc,
@@ -72,12 +63,12 @@ VBuffer::VBuffer(
     ));
 
     // get BDA
-    if ( buffer_usage_flags & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT ) {
+    if ( _ci.usage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT ) {
         VkBufferDeviceAddressInfo bda_info { };
         bda_info.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
         bda_info.buffer = _handle;
         _device_address =
-            vkGetBufferDeviceAddress(_factory.device( ), &bda_info);
+            vkGetBufferDeviceAddress(_factory->device( ), &bda_info);
 
         if ( _device_address == 0 ) {
             // bda fails
@@ -91,7 +82,7 @@ VBuffer::VBuffer(
 
     // for debugging, set name of the object
 #ifdef ENABLE_VULKAN_VALIDATION
-    set_buffer_debug_name(_factory.device( ), _handle, name.data( ));
+    set_buffer_debug_name(_factory->device( ), _handle, name.data( ));
 #endif
 }
 
@@ -99,41 +90,43 @@ VBuffer::~VBuffer( ) {
     // unmap before deletion
     // resource will live until synchronization
     if ( _alloc_info.pMappedData != nullptr ) {
-        vmaUnmapMemory(_factory.vma_allocator( ), _alloc);
+        vmaUnmapMemory(_factory->vma_allocator( ), _alloc);
     }
     // push resources to the deletion queue
     // allocation and buffer
     if ( _alloc != nullptr ) {
-        _factory.get_current_deletion_queue( ).enque(
+        _factory->get_current_deletion_queue( ).enque(
             std::make_pair(_alloc, _handle)
         );
     }
 }
 
 // Movable
-VBuffer::VBuffer(VBuffer&& other) :
+VBuffer::VBuffer(VBuffer&& other) noexcept :
     _factory(other._factory),
     _alloc(other._alloc),
     _handle(other._handle),
     _device_address(other._device_address),
     _alloc_info(other._alloc_info),
-    _buffer_usage_flags(other._buffer_usage_flags),
+    _ci(other._ci),
     _mem_usage(other._mem_usage) {
     // nullify
+    other._factory = nullptr;
     other._alloc = nullptr;
     other._handle = VK_NULL_HANDLE;
     other._device_address = 0;
-    other._buffer_usage_flags = 0;
+    other._ci = { };
     other._mem_usage = { };
 }
 
-VBuffer& VBuffer::operator=(VBuffer&& other) {
+VBuffer& VBuffer::operator=(VBuffer&& other) noexcept {
     if ( this != &other ) {
+        std::swap(other._factory, _factory);
         std::swap(other._alloc, _alloc);
         std::swap(other._handle, _handle);
         std::swap(other._device_address, _device_address);
         std::swap(other._alloc_info, _alloc_info);
-        std::swap(other._buffer_usage_flags, _buffer_usage_flags);
+        std::swap(other._ci, _ci);
         std::swap(other._mem_usage, _mem_usage);
     }
     return *this;
@@ -143,7 +136,7 @@ void VBuffer::flush(VkDeviceSize size, VkDeviceSize offset) {
     // if the buffer is not host coherent, fluse needed.
     // call after all memcpy called
     // but on PC, all host visible memory will be host coherent...
-    vmaFlushAllocation(_factory.vma_allocator( ), _alloc, offset, size);
+    vmaFlushAllocation(_factory->vma_allocator( ), _alloc, offset, size);
 }
 
 /*
@@ -163,7 +156,7 @@ void VBuffer::write_back(
     VkDeviceSize dst_offset
 ) {
     vmaCopyMemoryToAllocation(
-        _factory.vma_allocator( ),
+        _factory->vma_allocator( ),
         src,
         _alloc,
         dst_offset,
@@ -172,7 +165,7 @@ void VBuffer::write_back(
 }
 
 void VBuffer::invalidate(VkDeviceSize size, VkDeviceSize offset) {
-    vmaInvalidateAllocation(_factory.vma_allocator( ), _alloc, offset, size);
+    vmaInvalidateAllocation(_factory->vma_allocator( ), _alloc, offset, size);
 }
 
 /*
@@ -192,7 +185,7 @@ void VBuffer::read_back(
     VkDeviceSize src_offset
 ) {
     vmaCopyAllocationToMemory(
-        _factory.vma_allocator( ),
+        _factory->vma_allocator( ),
         _alloc,
         src_offset,
         dst,

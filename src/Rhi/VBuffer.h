@@ -21,25 +21,26 @@ namespace Rhi {
         // resource manager is the factory
         // friend class VResourceManager;
         // factory is always has to be single
-        VResourceManager& _factory;
+        VResourceManager* _factory;
+
+        // buffer handle
+        VkBuffer _handle = VK_NULL_HANDLE;
 
         // vulkan related
         VmaAllocation _alloc = nullptr;
-        VkBuffer _handle = VK_NULL_HANDLE;
-        VkDeviceAddress _device_address = 0;
         VmaAllocationInfo _alloc_info = { };
-
-        // flags
-        // vulkan memory type flags
-        VkBufferUsageFlags _buffer_usage_flags = 0;
-        // vma usage
         VmaMemoryUsage _mem_usage;
+
+        // for BDA
+        VkDeviceAddress _device_address = 0;
+
+        // buffer info
+        VkBufferCreateInfo _ci;
 
       public:
         VBuffer(
             VResourceManager& source, // factory
-            VkDeviceSize size, // required size
-            VkBufferUsageFlags buffer_usage_flags,
+            VkBufferCreateInfo ci,
             VmaMemoryUsage mem_usage = VMA_MEMORY_USAGE_AUTO,
             VmaAllocationCreateFlags alloc_flags = 0,
             VkMemoryPropertyFlags req_flags = 0,
@@ -50,8 +51,8 @@ namespace Rhi {
         virtual ~VBuffer( );
 
         // Movable
-        VBuffer(VBuffer&& other);
-        VBuffer& operator=(VBuffer&& other);
+        VBuffer(VBuffer&& other) noexcept;
+        VBuffer& operator=(VBuffer&& other) noexcept;
 
         /* ---------  Getter --------- */
         VkBuffer handle( ) const {
@@ -72,7 +73,7 @@ namespace Rhi {
         } // frequently used
 
         VkBufferUsageFlags usage( ) const {
-            return _buffer_usage_flags;
+            return _ci.usage;
         }
 
         /* ---------  IO --------- */
