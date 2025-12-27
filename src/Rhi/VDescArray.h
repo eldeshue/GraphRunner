@@ -24,6 +24,7 @@ namespace Rhi {
 
       public:
         VDescArray(VkDescriptorType type, size_t cap);
+        ~VDescArray( );
         VDescArray(VDescArray&& other) noexcept;
         VDescArray& operator=(VDescArray&& other) noexcept;
 

@@ -15,6 +15,8 @@ VDescArray::VDescArray(VkDescriptorType type, size_t cap) :
     std::iota(_free_stack.rbegin( ), _free_stack.rend( ), 0);
 }
 
+VDescArray::~VDescArray( ) {}
+
 VDescArray::VDescArray(VDescArray&& other) noexcept :
     _type(other._type),
     _cap(other._cap),
