@@ -74,9 +74,7 @@ VResourceManager::VResourceManager(
     _rhi_device(dvc),
     _rhi_phys_device(pdvc),
     _allocator(create_vma_with_volk(inst, pdvc, dvc)),
-    _render_semaphores(nullptr),
-    _del_queues( ),
-    _del_thread( ) {
+    _del_queues( ) {
     // query device limits
     query_device_limits(_rhi_phys_device, _desc_index_props, _pdv_props);
 
@@ -92,7 +90,7 @@ VResourceManager::VResourceManager(
         ));
     }
 
-    // TBD : bindless desc pool
+    // TBD : bindless desc manager
     // use device limit
 }
 
@@ -112,109 +110,42 @@ namespace {
 
 // start rendering
 // wait for preload ends
-// create deletion thread
-// timeline semaphores from rendering threads
 // must be called before rendering(recording commands)
 // param semaphores must not to be reallocated.
-void VResourceManager::start_render(std::vector<VkSemaphore> const* semaphores
-) {
-    // init deletion threads
-    if ( _del_thread.joinable( ) ) {
-        // end_render was not called, must not happen
-        throw std::runtime_error("Error : previous rendering was not ended.");
-    }
-
-    // TBD : wait for preloading ends
-    // waiting frame index 0 ends
-
-    // set before rendering start
-    _render_semaphores = semaphores;
-
-    // init deletion thread
-    _del_thread = std::jthread([this](std::stop_token stoken) {
-        // exception must stay in the thread
-        // or the thread will be terminated
-        try {
-            uint64_t wait_frame_index =
-                1; // frame index 0 means rendering not started
-            std::vector<uint64_t> values(this->_render_semaphores->size( ), 0);
-
-            // wait multiple timeline semaphores at the same time
-            VkSemaphoreWaitInfo waitInfo { };
-            waitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO;
-            waitInfo.pSemaphores = this->_render_semaphores->data( );
-            waitInfo.pValues = values.data( );
-            waitInfo.semaphoreCount =
-                static_cast<uint32_t>(this->_render_semaphores->size( ));
-            waitInfo.flags = 0; // wait for all semaphores
-            waitInfo.pNext = nullptr;
-
-            // run until request_stop arrives
-            while ( !stoken.stop_requested( ) ) {
-                // set frame number to wait
-                std::fill(values.begin( ), values.end( ), wait_frame_index);
-
-                // must have time-out to check stop token
-                VkResult result = vkWaitSemaphores(
-                    this->_rhi_device,
-                    &waitInfo,
-                    100'000'000 // 100ms
-                );
-
-                if ( result == VK_SUCCESS ) {
-                    // get bucket index
-                    uint32_t bucket_index =
-                        wait_frame_index % RHI_MAX_FRAMES_IN_FLIGHT;
-
-                    // delete resources
-                    this->_del_queues[bucket_index].deque( );
-
-                    // advance to next frame-index
-                    wait_frame_index++;
-                } else if ( result == VK_TIMEOUT ) {
-                    // GPU is still busy.
-                    continue;
-                } else {
-                    // Device Lost
-                    // do not handle, panic
-                    // critical error, logging needed
-                    print_log(
-                        "Error : vkWaitSemaphores failed in deletion thread.\n"
-                    );
-                    check(result); // throw from here
-                }
-            }
-        } catch ( std::exception e ) {
-            // logging
-            print_log(
-                "Error : exception thrown in deletion thread. {}.",
-                e.what( )
-            );
-        }
-    });
+void VResourceManager::start_render( ) {
+    // TBD : call routine that must be called before rendering starts
 }
 
 // end rendering
-// wait and delete deletion threads
-// after thread ends, delete all resources after gpu stops running
-// must be called after all rendering ends(gpu sync needed)
+// must be called to end rendering(after gpu synced)
 void VResourceManager::end_render( ) {
     // clear deletion manager
     {
-        // wait for deletion thread ends
-        if ( _del_thread.joinable( ) ) {
-            _del_thread.request_stop( ); // stop_token 플래그를 true로 설정
-            _del_thread.join( ); // 스레드가 루프를 빠져나와 종료될 때까지 대기
-        }
-        // after join, _del_thread is not joinable
-
         // after deletion thread ends, manually delete all resources
         for ( auto& queue : _del_queues ) {
             queue.clear_all( );
         }
     }
 
-    // TBD : clear staging manager
+    // TBD : clear staging queue
+}
+
+/* ---------- frame based resource control ---------- */
+// start frame
+// must be called after the frame index updated
+// delete all data in current frame's deletion queue
+void VResourceManager::start_frame( ) {
+    // delete all data in current deletion queue
+    // those are ready to be deleted in gpu
+    get_current_deletion_queue( ).clear_all( );
+
+    // TBD : per frame, before render starts
+}
+
+// end frame
+// must be called before the next frame starts
+void VResourceManager::end_frame( ) {
+    // TBD : per frame, before next render starts
 }
 
 /* ---------- resource factory ---------- */

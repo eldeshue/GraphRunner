@@ -39,35 +39,33 @@ namespace Rhi {
         // memory allocator, vma
         VmaAllocator const _allocator;
 
-        // vector of timeline semaphores
-        // each semaphore is shared by each rendering thread
-        // staging, deletion will be synchronized based on those semaphores
-        std::vector<VkSemaphore> const* _render_semaphores;
-
         /* ---------- dynamic resource managing ---------- */
         // deletion manager
         // per frame deletion queue
-        // need mutex for each queue
-        // thread for consuming data in deletion queue
         std::vector<DeletionQueue> _del_queues;
-        std::jthread _del_thread;
 
         // desc manager
         // necessary component for bindless architecture
         // mega sized descriptor array for desc_indexing
         // TBD : after transfer
 
-        // transfer manager
-        // per frame large(128MB?) mapped buffer for staging(host visible, host coherent)
+        // sync transfer
+        // sync transfer with gfx queue
+        // per frame mapped buffer for staging(host visible, host coherent)
         // after frame set, reset the offset
-        // use gfx command queue for copy command(TBD : ownership transfer)
         // use task queue to save offset and mapped pointer
         // record all copy command before rendering starts
-        // synchronization needed, no ownership transfer
-        // reallocate if the staging memory is not enough
+        // synchronized using pipeline barrier, no ownership transfer
         std::vector<VStagingHeap> _staging_heaps;
 
-        // streaming manager
+        // async transfer
+        // async transfer with transfer only queue and temporal staging buffer
+        // will update desc index of resource
+        // ownership transfer from transfer queue to gfx queue needed
+        // reallocate if the staging memory is not enough
+        // TBD : after RDG
+
+        // streaming
         // virtual tiling,
         // TBD : after RDG
 
@@ -121,7 +119,7 @@ namespace Rhi {
         // start rendering
         // wait for preload ends
         // create deletion thread
-        void start_render(std::vector<VkSemaphore> const* semaphores);
+        void start_render( );
 
         /* ---------- while rendering ---------- */
         // frame_num > 0 : while rendering
@@ -130,6 +128,11 @@ namespace Rhi {
         // wait and delete deletion threads
         // after thread ends, delete all resources after gpu stops running
         void end_render( );
+
+        /* ---------- frame based resource control ---------- */
+        // must be called by main rendering thread, owner of the resource
+        void start_frame( );
+        void end_frame( );
 
         /* ---------- resource factory ---------- */
         // resource creation
