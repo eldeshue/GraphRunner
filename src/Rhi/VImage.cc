@@ -99,3 +99,24 @@ VImage& VImage::operator=(VImage&& other) noexcept {
     }
     return *this;
 }
+
+// guess default layout based on image usage in creation info
+VkImageLayout VImage::guess_default_layout( ) const {
+    // 1. Texture for Sampling as a Shader Resource
+    if ( _ci.usage & VK_IMAGE_USAGE_SAMPLED_BIT ) {
+        return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    }
+
+    // 2. Storage Image(UAV)
+    if ( _ci.usage & VK_IMAGE_USAGE_STORAGE_BIT ) {
+        return VK_IMAGE_LAYOUT_GENERAL;
+    }
+
+    // 3. Depth/Stencil
+    if ( _ci.usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT ) {
+        return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+    }
+
+    // 4. 그 외 (잘 없지만 안전빵)
+    return VK_IMAGE_LAYOUT_GENERAL;
+}

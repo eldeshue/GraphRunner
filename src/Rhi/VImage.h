@@ -131,6 +131,9 @@ namespace Rhi {
         void set_queue_family_index(uint32_t new_index) {
             _cur_queue_family_index = new_index;
         }
+
+        /* --------- helper methods --------- */
+        VkImageLayout guess_default_layout( ) const;
     };
 } // namespace Rhi
 } // namespace GraphRunner
