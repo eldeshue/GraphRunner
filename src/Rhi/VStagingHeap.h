@@ -37,6 +37,11 @@ namespace Rhi {
         );
         ~VStagingHeap( );
 
+        // getter
+        VBuffer const& handle( ) const {
+            return _buffer;
+        }
+
         // move
         VStagingHeap(VStagingHeap&& other) noexcept;
         VStagingHeap& operator=(VStagingHeap&& other) noexcept;
