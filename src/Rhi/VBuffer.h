@@ -37,6 +37,10 @@ namespace Rhi {
         // buffer info
         VkBufferCreateInfo _ci;
 
+        // status
+        VkPipelineStageFlags2 _stage_flag = VK_PIPELINE_STAGE_2_NONE;
+        VkAccessFlags2 _access_flag = VK_ACCESS_2_NONE;
+
       public:
         VBuffer(
             VResourceManager& source, // factory
@@ -74,6 +78,23 @@ namespace Rhi {
 
         VkBufferUsageFlags usage( ) const {
             return _ci.usage;
+        }
+
+        VkPipelineStageFlags2 stage_flag( ) const {
+            return _stage_flag;
+        }
+
+        VkAccessFlags2 access_flag( ) const {
+            return _access_flag;
+        }
+
+        /* ---------  Setter --------- */
+        void set_stage_flag(VkPipelineStageFlags2 new_stage) {
+            _stage_flag = new_stage;
+        }
+
+        void set_access_flag(VkAccessFlags2 new_access) {
+            _access_flag = new_access;
         }
 
         /* ---------  IO --------- */

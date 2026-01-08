@@ -35,6 +35,9 @@ namespace Rhi {
         VkImageCreateInfo _ci;
         VkImageAspectFlags _aspect_flags;
 
+        VkPipelineStageFlags2 _stage_flag = VK_PIPELINE_STAGE_2_NONE;
+        VkAccessFlags2 _access_flag = VK_ACCESS_2_NONE;
+
       public:
         // basic constructr
         VImage(
@@ -57,6 +60,10 @@ namespace Rhi {
         // vulkan image handle
         VkImage handle( ) const {
             return _handle;
+        }
+
+        VResourceManager* factory( ) const {
+            return _factory;
         }
 
         // vulkan related status
@@ -93,10 +100,27 @@ namespace Rhi {
             return _alloc_info.size;
         }
 
+        VkPipelineStageFlags2 stage_flag( ) const {
+            return _stage_flag;
+        }
+
+        VkAccessFlags2 access_flag( ) const {
+            return _access_flag;
+        }
+
+        /* ---------  Setter --------- */
         // set current layout status
         // actual layout transfer needs command recording
-        void set_new_layout(VkImageLayout new_layout) {
+        void set_layout(VkImageLayout new_layout) {
             _cur_layout = new_layout;
+        }
+
+        void set_stage_flag(VkPipelineStageFlags2 new_stage) {
+            _stage_flag = new_stage;
+        }
+
+        void set_access_flag(VkAccessFlags2 new_access) {
+            _access_flag = new_access;
         }
     };
 } // namespace Rhi
