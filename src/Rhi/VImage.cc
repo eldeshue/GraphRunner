@@ -38,7 +38,8 @@ VImage::VImage(
     _factory(&source),
     _cur_layout(img_ci.initialLayout),
     _ci(img_ci),
-    _aspect_flags(aspect_flags) {
+    _aspect_flags(aspect_flags),
+    _cur_queue_family_index(_ci.pQueueFamilyIndices[0]) {
     VmaAllocationCreateInfo alloc_ci = { };
     alloc_ci.usage = mem_usage;
     alloc_ci.flags = alloc_flags;
@@ -79,7 +80,8 @@ VImage::VImage(VImage&& other) noexcept :
     _alloc_info(other._alloc_info),
     _cur_layout(other._cur_layout),
     _ci(other._ci),
-    _aspect_flags(other._aspect_flags) {
+    _aspect_flags(other._aspect_flags),
+    _cur_queue_family_index(other._cur_queue_family_index) {
     other._alloc = nullptr;
 }
 
@@ -93,6 +95,7 @@ VImage& VImage::operator=(VImage&& other) noexcept {
         std::swap(_cur_layout, other._cur_layout);
         std::swap(_ci, other._ci);
         std::swap(_aspect_flags, other._aspect_flags);
+        std::swap(_cur_queue_family_index, other._cur_queue_family_index);
     }
     return *this;
 }

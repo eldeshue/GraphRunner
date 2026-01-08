@@ -34,7 +34,10 @@ VBuffer::VBuffer(
     bool is_mapped,
     std::string_view name
 ) :
-    _factory(&source), _ci(ci), _mem_usage(mem_usage) {
+    _factory(&source),
+    _ci(ci),
+    _mem_usage(mem_usage),
+    _cur_queue_family_index(ci.pQueueFamilyIndices[0]) {
     // initialize memory mapping
     // must set one of next two bit
     // VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT for write,staging buffer
@@ -109,7 +112,8 @@ VBuffer::VBuffer(VBuffer&& other) noexcept :
     _device_address(other._device_address),
     _alloc_info(other._alloc_info),
     _ci(other._ci),
-    _mem_usage(other._mem_usage) {
+    _mem_usage(other._mem_usage),
+    _cur_queue_family_index(other._cur_queue_family_index) {
     // nullify
     other._factory = nullptr;
     other._alloc = nullptr;
@@ -128,6 +132,7 @@ VBuffer& VBuffer::operator=(VBuffer&& other) noexcept {
         std::swap(other._alloc_info, _alloc_info);
         std::swap(other._ci, _ci);
         std::swap(other._mem_usage, _mem_usage);
+        std::swap(other._cur_queue_family_index, _cur_queue_family_index);
     }
     return *this;
 }

@@ -35,11 +35,12 @@ namespace Rhi {
         VkDeviceAddress _device_address = 0;
 
         // buffer info
-        VkBufferCreateInfo _ci;
+        VkBufferCreateInfo _ci; // current queue family index is saved here
 
         // status
         VkPipelineStageFlags2 _stage_flag = VK_PIPELINE_STAGE_2_NONE;
         VkAccessFlags2 _access_flag = VK_ACCESS_2_NONE;
+        uint32_t _cur_queue_family_index;
 
       public:
         VBuffer(
@@ -88,6 +89,10 @@ namespace Rhi {
             return _access_flag;
         }
 
+        uint32_t cur_queue_family_index( ) const {
+            return _cur_queue_family_index;
+        }
+
         /* ---------  Setter --------- */
         void set_stage_flag(VkPipelineStageFlags2 new_stage) {
             _stage_flag = new_stage;
@@ -95,6 +100,10 @@ namespace Rhi {
 
         void set_access_flag(VkAccessFlags2 new_access) {
             _access_flag = new_access;
+        }
+
+        void set_queue_family_index(uint32_t new_index) {
+            _cur_queue_family_index = new_index;
         }
 
         /* ---------  IO --------- */

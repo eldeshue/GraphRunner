@@ -37,6 +37,7 @@ namespace Rhi {
 
         VkPipelineStageFlags2 _stage_flag = VK_PIPELINE_STAGE_2_NONE;
         VkAccessFlags2 _access_flag = VK_ACCESS_2_NONE;
+        uint32_t _cur_queue_family_index;
 
       public:
         // basic constructr
@@ -108,6 +109,10 @@ namespace Rhi {
             return _access_flag;
         }
 
+        uint32_t cur_queue_family_index( ) const {
+            return _cur_queue_family_index;
+        }
+
         /* ---------  Setter --------- */
         // set current layout status
         // actual layout transfer needs command recording
@@ -121,6 +126,10 @@ namespace Rhi {
 
         void set_access_flag(VkAccessFlags2 new_access) {
             _access_flag = new_access;
+        }
+
+        void set_queue_family_index(uint32_t new_index) {
+            _cur_queue_family_index = new_index;
         }
     };
 } // namespace Rhi
