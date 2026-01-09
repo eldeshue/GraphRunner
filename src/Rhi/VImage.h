@@ -4,13 +4,13 @@
 #include <string_view>
 
 #include "./GraphicsApiCore.h"
-#include "./VResource.h"
+#include "./RenderResource.h"
 
 namespace GraphRunner {
 namespace Rhi {
     class VResourceManager;
 
-    class VImage: public VResource {
+    class VImage: public RenderResource {
       private:
         // no default, no copy
         VImage( ) = delete;
