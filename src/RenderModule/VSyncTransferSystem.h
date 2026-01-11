@@ -23,8 +23,9 @@ namespace RenderModule {
 
     struct VSyncImageTransferInfo {
         Rhi::VImage* dst;
-        VkOffset3D dst_offset;
-        VkImageSubresourceLayers dst_range;
+        VkImageSubresourceLayers dst_area; // target area(array layer, mip, ...)
+        VkOffset3D dst_pos; // start pos in the area
+        VkExtent3D dst_range; // range to copy in the area
     };
 
     struct VSyncTransferInfo {

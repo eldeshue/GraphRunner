@@ -126,9 +126,9 @@ void VSyncTransferSystem::execute(uint32_t cur_frame_index, void* param) {
                 cpy_rgn.bufferOffset = result->offset;
                 cpy_rgn.bufferRowLength = 0; // tightly packed
                 cpy_rgn.bufferImageHeight = 0; // tightly packed
-                cpy_rgn.imageExtent = target.dst->extent( );
-                cpy_rgn.imageOffset = target.dst_offset;
-                cpy_rgn.imageSubresource = target.dst_range;
+                cpy_rgn.imageExtent = target.dst_range;
+                cpy_rgn.imageOffset = target.dst_pos;
+                cpy_rgn.imageSubresource = target.dst_area;
                 cur_queue._img_copy_rgns.push_back(cpy_rgn);
 
                 VkCopyBufferToImageInfo2 cpy_info { };
