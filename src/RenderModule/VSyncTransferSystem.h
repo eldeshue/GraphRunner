@@ -9,20 +9,20 @@
 #include "RenderSystem.h"
 
 namespace GraphRunner {
-namespace Rhi {
-    class VResourceManager;
-    class VStagingHeap;
-    class VBuffer;
-    class VImage;
-    class VRhi;
+class Rhi::VResourceManager;
+class Rhi::VStagingHeap;
+class Rhi::VBuffer;
+class Rhi::VImage;
+class Rhi::VRhi;
 
+namespace RenderModule {
     struct VSyncBufferTransferInfo {
-        VBuffer* dst;
+        Rhi::VBuffer* dst;
         VkDeviceSize dst_offset;
     };
 
     struct VSyncImageTransferInfo {
-        VImage* dst;
+        Rhi::VImage* dst;
         VkOffset3D dst_offset;
         VkImageSubresourceLayers dst_range;
     };
@@ -50,16 +50,16 @@ namespace Rhi {
         std::vector<VkImageMemoryBarrier2> _after_flush_img_barriers;
 
         // per frame mapped buffer for staging(host visible, host coherent)
-        std::vector<VStagingHeap> _staging_heaps;
+        std::vector<Rhi::VStagingHeap> _staging_heaps;
 
         struct SyncTransferQueue {
             // buffer to buffer copy vector
-            std::set<VBuffer*> _buf_target; // to prevent double check
+            std::set<Rhi::VBuffer*> _buf_target; // to prevent double check
             std::deque<VkBufferCopy2>
                 _buf_copy_rgns; // use deque to prevent reallocation
             std::vector<VkCopyBufferInfo2> _buf_cpy_infos;
             // buffer to image copy vector
-            std::set<VImage*> _img_target; // to prevent double check
+            std::set<Rhi::VImage*> _img_target; // to prevent double check
             std::deque<VkBufferImageCopy2>
                 _img_copy_rgns; // to prevent reallocation
             std::vector<VkCopyBufferToImageInfo2> _img_cpy_infos;
@@ -69,7 +69,7 @@ namespace Rhi {
 
       public:
         // take pointer to rhi, need Resource manager
-        VSyncTransferSystem(VRhi* prhi);
+        VSyncTransferSystem(Rhi::VRhi* prhi);
 
         ~VSyncTransferSystem( ) {}
 
@@ -95,5 +95,5 @@ namespace Rhi {
         // for simple usage
         void flush(VkCommandBuffer cmd_buffer, uint32_t cur_frame_index);
     };
-} // namespace Rhi
+} // namespace RenderModule
 } // namespace GraphRunner

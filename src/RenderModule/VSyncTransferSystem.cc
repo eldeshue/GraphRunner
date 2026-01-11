@@ -8,7 +8,9 @@
 #include "./VRhi.h"
 #include "./VStagingHeap.h"
 
-namespace GraphRunner::Rhi {
+using namespace GraphRunner::Rhi;
+
+namespace GraphRunner::RenderModule {
 
 // default staging heap size, 32MB
 namespace {
@@ -319,4 +321,4 @@ void VSyncTransferSystem::flush(
     }
 }
 
-} // namespace GraphRunner::Rhi
+} // namespace GraphRunner::RenderModule
