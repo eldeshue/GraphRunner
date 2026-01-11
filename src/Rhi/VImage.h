@@ -76,6 +76,10 @@ namespace Rhi {
             return _ci.format;
         }
 
+        VkImageType type( ) const {
+            return _ci.imageType;
+        }
+
         VkImageUsageFlags usage_flags( ) const {
             return _ci.usage;
         }
@@ -83,6 +87,26 @@ namespace Rhi {
         VkImageAspectFlags aspect_flags( ) const {
             return _aspect_flags;
         }
+
+        // VMA info
+        size_t size( ) const {
+            return _alloc_info.size;
+        }
+
+        // Sync Info, pipeline barrier
+        VkPipelineStageFlags2 stage_flag( ) const {
+            return _stage_flag;
+        }
+
+        VkAccessFlags2 access_flag( ) const {
+            return _access_flag;
+        }
+
+        uint32_t cur_queue_family_index( ) const {
+            return _cur_queue_family_index;
+        }
+
+        /* ---------- Dimension Info ---------- */
 
         // other meta data
         VkExtent3D extent( ) const {
@@ -94,23 +118,8 @@ namespace Rhi {
         }
 
         uint32_t array_layer_cnt( ) const {
+            // 3D image must return 1
             return _ci.arrayLayers;
-        }
-
-        size_t size( ) const {
-            return _alloc_info.size;
-        }
-
-        VkPipelineStageFlags2 stage_flag( ) const {
-            return _stage_flag;
-        }
-
-        VkAccessFlags2 access_flag( ) const {
-            return _access_flag;
-        }
-
-        uint32_t cur_queue_family_index( ) const {
-            return _cur_queue_family_index;
         }
 
         /* ---------  Setter --------- */
@@ -133,7 +142,40 @@ namespace Rhi {
         }
 
         /* --------- helper methods --------- */
+        bool is_3d( ) const {
+            return (_ci.imageType == VK_IMAGE_TYPE_3D);
+        }
+
+        bool is_array( ) const {
+            // 3d image must return false
+            return _ci.arrayLayers > 1;
+        }
+
+        VkImageViewType guess_view_type( ) const;
         VkImageLayout guess_default_layout( ) const;
+
+        // format helpers
+        struct FormatTrait {
+            uint32_t block_width; // 일반 픽셀이면 1, BC 압축이면 4
+            uint32_t block_height; // 일반 픽셀이면 1, BC 압축이면 4
+            uint32_t bytes_per_block; // 픽셀당 바이트(bpp) 혹은 블록당 바이트
+        };
+
+        inline static FormatTrait get_format_trait(VkFormat format);
+
+        // 계산된 사이즈와 정렬 정보를 담을 구조체
+        struct ImageCopyInfo {
+            VkDeviceSize size; // Calculated Memory Size(Byte )
+            VkDeviceSize
+                alignment; // Memory Offset Alignment for buffer copy (Byte)
+            VkExtent3D block_count; // (디버깅용) 가로/세로 블록 개수
+        };
+
+        inline static ImageCopyInfo get_image_copy_requirement(
+            VkFormat format,
+            VkExtent3D extent,
+            uint32_t layer_count = 1
+        );
     };
 } // namespace Rhi
 } // namespace GraphRunner
